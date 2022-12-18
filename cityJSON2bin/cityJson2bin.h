@@ -7,15 +7,15 @@
 
 
 #ifndef CITYJSON2BIN_EXTERN
-#ifdef MSC_VER
-#ifdef CITYJSON2BIN_BUILD
-#define CITYJSON2BIN_EXPORT __declspec(dllexport)
-#else
-#define CITYJSON2BIN_EXPORT __declspec(dllimport)
-#endif // CITYJSON2BIN_BUILD
-#else // MSC_VER
-#define CITYJSON2BIN_EXPORT /**/
-#endif
+    #ifdef _MSC_VER
+        #ifdef CITYJSON2BIN_BUILD
+            #define CITYJSON2BIN_EXPORT __declspec(dllexport)
+        #else
+            #define CITYJSON2BIN_EXPORT __declspec(dllimport)
+        #endif // CITYJSON2BIN_BUILD
+    #else
+        #define CITYJSON2BIN_EXPORT /**/
+    #endif
 #endif
 
 
