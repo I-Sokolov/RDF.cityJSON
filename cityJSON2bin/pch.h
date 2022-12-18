@@ -11,6 +11,9 @@
 
 #include <stdio.h>
 
+#define RAPIDJSON_ASSERT(x) {if(!(x)) {JsonAssertionError(#x,__FILE__,__LINE__);}}
+extern void JsonAssertionError(const char* assertion, const char* file, int line);
+
 #include <rapidjson.h>
 #include <document.h>
 #include <filereadstream.h>

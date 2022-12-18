@@ -18,7 +18,13 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cityJson2bin.h">
+    <ClInclude Include="cityJson2binAPI.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cityJson2BinImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Keywords.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 
-#include "cityJson2bin.h"
+#include "cityJson2binAPI.h"
 
 int main(int argc, const char* argv[])
 {
@@ -15,6 +15,7 @@ int main(int argc, const char* argv[])
 
     auto res = cityJson2bin_Convert(argv[1], argv[2]);
 
+    /*
     switch (res)
     {
         case enum_cityJson2bin_result::OK:
@@ -27,7 +28,11 @@ int main(int argc, const char* argv[])
             printf("ERROR: code %d\n", (int) res);
             break;
     }
-    
-    return (int) res;
+    */
+    if (res) {
+        printf("ERROR: %s\n", res);
+    }
+
+    return res ? 1 : 0;
 }
 

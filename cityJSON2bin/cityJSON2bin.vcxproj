@@ -163,8 +163,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="cityJson2bin.h" />
+    <ClInclude Include="cityJson2binAPI.h" />
+    <ClInclude Include="Keywords.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="cityJson2BinImpl.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cityJson2bin.cpp" />
