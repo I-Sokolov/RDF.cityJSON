@@ -11,8 +11,23 @@ int main(int argc, const char* argv[])
         return -1;
     }
 
-    cityJson2bin_Convert(argv[1], argv[2]);
+    printf("Converting %s to %s....\n", argv[1], argv[2]);
 
-    return 0;
+    auto res = cityJson2bin_Convert(argv[1], argv[2]);
+
+    switch (res)
+    {
+        case enum_cityJson2bin_result::OK:
+            printf("Converted successfully\n");
+            break;
+        case enum_cityJson2bin_result::FailRead:
+            printf("ERROR: failed to read input file\n");
+            break;
+        default:
+            printf("ERROR: code %d\n", (int) res);
+            break;
+    }
+    
+    return (int) res;
 }
 

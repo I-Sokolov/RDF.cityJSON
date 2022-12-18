@@ -19,8 +19,24 @@
 #endif
 
 
-extern CITYJSON2BIN_EXPORT void cityJson2bin_Convert(
+/// <summary>
+/// 
+/// </summary>
+enum class enum_cityJson2bin_result : unsigned char
+{
+    OK = 0,
+    FailRead
+};
+
+
+/// <summary>
+/// 
+/// </summary>
+/// <param name="filePathCityJson"></param>
+/// <param name="filePathBin"></param>
+/// <returns></returns>
+extern CITYJSON2BIN_EXPORT enum_cityJson2bin_result cityJson2bin_Convert(
     const char* filePathCityJson,
-    const char* filePathBin
+    const char* filePathBin    
 );
 

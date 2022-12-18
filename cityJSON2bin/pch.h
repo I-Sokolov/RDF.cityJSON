@@ -7,7 +7,13 @@
 #ifndef PCH_H
 #define PCH_H
 
+#define _CRT_SECURE_NO_WARNINGS
+
 #include <stdio.h>
+
+#include <rapidjson.h>
+#include <document.h>
+#include <filereadstream.h>
 
 #define CITYJSON2BIN_BUILD
 
