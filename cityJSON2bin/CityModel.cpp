@@ -2,18 +2,18 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "Geometry.h"
-#include "CityJson.h"
+#include "CityModel.h"
 
 //---------------------------------------------------------------------------------
 //
-CityJson::CityJson()
+CityModel::CityModel()
 {
     m_owlDOM = CreateModel();
 }
 
 //---------------------------------------------------------------------------------
 //
-CityJson::~CityJson()
+CityModel::~CityModel()
 {
     CloseModel(m_owlDOM);
 }
@@ -21,7 +21,7 @@ CityJson::~CityJson()
 
 //---------------------------------------------------------------------------------
 //
-void CityJson::Convert(const char* cityFilePath, const char* rdfFilePath)
+void CityModel::Convert(const char* cityFilePath, const char* rdfFilePath)
 {
     ReadCityFile(cityFilePath);
 
@@ -33,7 +33,7 @@ void CityJson::Convert(const char* cityFilePath, const char* rdfFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityJson::SaveBinFile(const char* rdfFilePath)
+void CityModel::SaveBinFile(const char* rdfFilePath)
 {
     auto fp = fopen(rdfFilePath, "w");
     if (!fp)
@@ -47,7 +47,7 @@ void CityJson::SaveBinFile(const char* rdfFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityJson::ReadCityFile(const char* cityFilePath)
+void CityModel::ReadCityFile(const char* cityFilePath)
 {
     const char* ReadMode = "rb";
 #ifndef WINDOWS
@@ -68,7 +68,7 @@ void CityJson::ReadCityFile(const char* cityFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityJson::ConvertCityJSONObject()
+void CityModel::ConvertCityJSONObject()
 {
     auto jtype = m_cityDOM[MEMBER_TYPE].GetString();
     if (strcmp(jtype, TYPE_CityJSON))
@@ -94,7 +94,7 @@ void CityJson::ConvertCityJSONObject()
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityJson::GetCityJSONVerticies(rapidjson::Value& jverticies)
+void CityModel::GetCityJSONVerticies(rapidjson::Value& jverticies)
 {
     assert(jverticies.IsArray());
     m_jverticies = jverticies;
@@ -103,14 +103,14 @@ void CityJson::GetCityJSONVerticies(rapidjson::Value& jverticies)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityJson::GetCityJSONTransform(rapidjson::Value& /*jtransform*/)
+void CityModel::GetCityJSONTransform(rapidjson::Value& /*jtransform*/)
 {
     //TODO
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityJson::ConvertCityObject(const char* id, rapidjson::Value& jobject)
+void CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
     auto& jtype = jobject[MEMBER_TYPE];
     printf("%s is %s\n", id, jtype.GetString());

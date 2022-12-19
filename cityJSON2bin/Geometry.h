@@ -1,11 +1,11 @@
 #pragma once
 
-class CityJson;
+class CityModel;
 
 class Geometry
 {
 public:
-    Geometry(CityJson& city) : m_city(city) {}
+    Geometry(CityModel& city) : m_city(city) {}
 
     void Convert(rapidjson::Value& jgeometry);
 
@@ -23,6 +23,6 @@ private:
     void GetPoint(Point3D& point, rapidjson::Value& jpoint);
 
 private:
-    CityJson&           m_city;
+    CityModel&           m_city;
 };
 

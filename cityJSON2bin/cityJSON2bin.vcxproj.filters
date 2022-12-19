@@ -21,7 +21,7 @@
     <ClInclude Include="cityJson2bin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CityJson.h">
+    <ClInclude Include="CityModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="CommonDefs.h">
@@ -35,7 +35,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CityJson.cpp">
+    <ClCompile Include="CityModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Geometry.cpp">

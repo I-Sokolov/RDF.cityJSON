@@ -1,11 +1,11 @@
 // IMPLEMENTATION DECLARATIONS
 #pragma once
 
-class CityJson
+class CityModel
 {
 public:
-    CityJson();
-    ~CityJson();
+    CityModel();
+    ~CityModel();
 
 public:
     void Convert(const char* cityFilePath, const char* rdfFilePath);

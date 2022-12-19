@@ -1,7 +1,7 @@
 
 #include "pch.h"
 #include "CommonDefs.h"
-#include "CityJson.h"
+#include "CityModel.h"
 #include "cityJson2bin.h"
 
 //-----------------------------------------------------------------------------------------------
@@ -14,7 +14,7 @@ extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
     cityJson2bin_error error = 0;
 
     try {
-        CityJson city;
+        CityModel city;
         city.Convert(filePathCityJson, filePathBin);
     }
     catch (cityJson2bin_error expt) {

@@ -191,10 +191,10 @@
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="CommonDefs.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="CityJson.h" />
+    <ClInclude Include="CityModel.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="CityJson.cpp" />
+    <ClCompile Include="CityModel.cpp" />
     <ClCompile Include="cityJson2bin.cpp" />
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="pch.cpp">
