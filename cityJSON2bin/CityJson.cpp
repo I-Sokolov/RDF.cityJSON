@@ -4,14 +4,45 @@
 #include "Geometry.h"
 #include "CityJson.h"
 
+//---------------------------------------------------------------------------------
+//
+CityJson::CityJson()
+{
+    m_owlDOM = CreateModel();
+}
 
 //---------------------------------------------------------------------------------
 //
-void CityJson::Convert (const char* cityFilePath, const char* /*rdfFilePath*/)
+CityJson::~CityJson()
+{
+    CloseModel(m_owlDOM);
+}
+
+
+//---------------------------------------------------------------------------------
+//
+void CityJson::Convert(const char* cityFilePath, const char* rdfFilePath)
 {
     ReadCityFile(cityFilePath);
 
     ConvertCityJSONObject();
+
+    SaveBinFile(rdfFilePath);    
+}
+
+
+//-----------------------------------------------------------------------------------------------
+//
+void CityJson::SaveBinFile(const char* rdfFilePath)
+{
+    auto fp = fopen(rdfFilePath, "w");
+    if (!fp)
+        THROW_ERROR("Filed to open output file");
+    fclose(fp);
+
+    auto res = SaveModel(m_owlDOM, rdfFilePath);
+    if (res)
+        THROW_ERROR("Failed to write output file");
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -25,7 +56,7 @@ void CityJson::ReadCityFile(const char* cityFilePath)
 
     FILE* fpInput = fopen(cityFilePath, ReadMode);
     if (!fpInput)
-        THROW_ERROR("Failed to open file");
+        THROW_ERROR("Failed to open input file");
 
     static char readBuff[65536];
     rapidjson::FileReadStream rstream(fpInput, readBuff, sizeof(readBuff));
