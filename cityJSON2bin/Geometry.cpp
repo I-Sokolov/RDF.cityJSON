@@ -19,31 +19,31 @@ void Geometry::ConvertItem(rapidjson::Value& jitem)
     auto& boundaries = jitem[MEMBER_BOUNDARIES];
 
     if (!strcmp(type, TYPE_MultiPoint)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_MultiLineString)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_MultiSurface)) {
         ConvertMultiSurface (boundaries);
     }
     else if (!strcmp(type, TYPE_CompositeSurface)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_Solid)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_MultiSolid)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_CompositeSolid)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_GeometryInstance)) {
-        THROW_ERROR("Unsupported geometry type");
+        //THROW_ERROR("Unsupported geometry type");
     }
     else {
-        THROW_ERROR("Unknown geometry type");
+        //THROW_ERROR("Unknown geometry type");
     }
 }
 
