@@ -41,7 +41,7 @@
     <ClCompile Include="Geometry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CommonDefs.cpp">
+    <ClCompile Include="cityJson2bin.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
