@@ -21,6 +21,7 @@ extern void JsonAssertionError(const char* assertion, const char* file, int line
 #include <document.h>
 #include <filereadstream.h>
 
+#include <geom.h>
 
 #define CITYJSON2BIN_BUILD
 
