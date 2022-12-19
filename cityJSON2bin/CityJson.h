@@ -1,12 +1,10 @@
 // IMPLEMENTATION DECLARATIONS
 #pragma once
 
-#define ERROR(error_code) {throw cityJson2bin_error(error_code);}
-
-class CCityJson2Bin
+class CityJson
 {
 public:
-    CCityJson2Bin(){}
+    CityJson(){}
 
 public:
     void Convert(const char* cityFilePath, const char* rdfFilePath);
@@ -19,7 +17,6 @@ private:
     void GetCityJSONVerticies(rapidjson::Value& jverticies);
 
     void ConvertCityObject(const char* id, rapidjson::Value& jobject);
-
 
 private:
     rapidjson::Document     m_cityDOM;

@@ -18,13 +18,16 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cityJson2binAPI.h">
+    <ClInclude Include="cityJson2bin.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="cityJson2BinImpl.h">
+    <ClInclude Include="CityJson.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Keywords.h">
+    <ClInclude Include="CommonDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Geometry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -32,7 +35,13 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="cityJson2bin.cpp">
+    <ClCompile Include="CityJson.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonDefs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

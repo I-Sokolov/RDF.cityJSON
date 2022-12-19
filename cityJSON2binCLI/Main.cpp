@@ -1,7 +1,7 @@
 
 #include <stdio.h>
 
-#include "cityJson2binAPI.h"
+#include "cityJson2bin.h"
 
 int main(int argc, const char* argv[])
 {

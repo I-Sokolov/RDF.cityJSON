@@ -1,5 +1,7 @@
 #pragma once
 
+//====================================================================
+
 #define VERSION_1_1         1.1
 
 #define MEMBER_TYPE         "type"
@@ -10,3 +12,7 @@
 #define MEMBER_GEOMETRY     "geometry"
 
 #define TYPE_CityJSON       "CityJSON"
+
+//====================================================================
+
+#define ERROR(error_code) {throw cityJson2bin_error(error_code);}

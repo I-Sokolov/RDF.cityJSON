@@ -1,8 +1,8 @@
 
 #include "pch.h"
-#include "cityJson2binAPI.h"
-#include "cityJson2binImpl.h"
-#include "Keywords.h"
+#include "cityJson2bin.h"
+#include "CityJson.h"
+#include "CommonDefs.h"
 
 //-----------------------------------------------------------------------------------------------
 //
@@ -14,8 +14,8 @@ extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
     cityJson2bin_error error = 0;
 
     try {
-        CCityJson2Bin conv;
-        conv.Convert(filePathCityJson, filePathBin);
+        CityJson city;
+        city.Convert(filePathCityJson, filePathBin);
     }
     catch (cityJson2bin_error expt) {
         error = expt;
@@ -26,23 +26,7 @@ extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
 
 //---------------------------------------------------------------------------------
 //
-
-extern void JsonAssertionError
-#ifdef _DEBUG
-(const char* assertion, const char* file, int line)
-#else
-(const char*, const char*, int)
-#endif
-{
-#ifdef _DEBUG
-    printf("JSON assertion '%s' failed at file %s line %d\n", assertion, file, line);
-#endif
-    ERROR("Something unexpected in JSON");
-}
-
-//---------------------------------------------------------------------------------
-//
-void CCityJson2Bin::Convert (const char* cityFilePath, const char* /*rdfFilePath*/)
+void CityJson::Convert (const char* cityFilePath, const char* /*rdfFilePath*/)
 {
     ReadCityFile(cityFilePath);
 
@@ -51,7 +35,7 @@ void CCityJson2Bin::Convert (const char* cityFilePath, const char* /*rdfFilePath
 
 //-----------------------------------------------------------------------------------------------
 //
-void CCityJson2Bin::ReadCityFile(const char* cityFilePath)
+void CityJson::ReadCityFile(const char* cityFilePath)
 {
     const char* ReadMode = "rb";
 #ifndef WINDOWS
@@ -72,7 +56,7 @@ void CCityJson2Bin::ReadCityFile(const char* cityFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CCityJson2Bin::ConvertCityJSONObject()
+void CityJson::ConvertCityJSONObject()
 {
     auto jtype = m_cityDOM[MEMBER_TYPE].GetString();
     if (strcmp(jtype, TYPE_CityJSON))
@@ -98,7 +82,7 @@ void CCityJson2Bin::ConvertCityJSONObject()
 
 //-----------------------------------------------------------------------------------------------
 //
-void CCityJson2Bin::GetCityJSONVerticies(rapidjson::Value& jverticies)
+void CityJson::GetCityJSONVerticies(rapidjson::Value& jverticies)
 {
     assert(jverticies.IsArray());
     m_jverticies = jverticies;
@@ -107,14 +91,14 @@ void CCityJson2Bin::GetCityJSONVerticies(rapidjson::Value& jverticies)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CCityJson2Bin::GetCityJSONTransform(rapidjson::Value& /*jtransform*/)
+void CityJson::GetCityJSONTransform(rapidjson::Value& /*jtransform*/)
 {
     //TODO
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void CCityJson2Bin::ConvertCityObject(const char* id, rapidjson::Value& jobject)
+void CityJson::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
     auto& jtype = jobject[MEMBER_TYPE];
     printf("%s is %s\n", id, jtype.GetString());

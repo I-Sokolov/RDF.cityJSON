@@ -163,13 +163,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="cityJson2binAPI.h" />
-    <ClInclude Include="Keywords.h" />
+    <ClInclude Include="cityJson2bin.h" />
+    <ClInclude Include="Geometry.h" />
+    <ClInclude Include="CommonDefs.h" />
     <ClInclude Include="pch.h" />
-    <ClInclude Include="cityJson2BinImpl.h" />
+    <ClInclude Include="CityJson.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="cityJson2bin.cpp" />
+    <ClCompile Include="CityJson.cpp" />
+    <ClCompile Include="CommonDefs.cpp" />
+    <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
