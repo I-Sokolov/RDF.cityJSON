@@ -7,6 +7,7 @@
 //---------------------------------------------------------------------------------
 //
 CityModel::CityModel()
+    :m_geometry (*this)
 {
     m_owlDOM = CreateModel();
 }
@@ -80,10 +81,10 @@ void CityModel::ConvertCityJSONObject()
         THROW_ERROR("Unsupported version");
 
     auto& jtransform = m_cityDOM[MEMBER_TRANSFORM];
-    GetCityJSONTransform(jtransform);
+    //TODO SetCityJSONTransform(jtransform);
 
     auto& jverticies = m_cityDOM[MEMBER_VERTICIES];
-    GetCityJSONVerticies(jverticies);
+    m_geometry.SetCityVerticies(jverticies);
 
     for (auto& o : m_cityDOM[MEMBER_CITYOBJECTS].GetObject()) {
         auto id = o.name.GetString();
@@ -92,21 +93,6 @@ void CityModel::ConvertCityJSONObject()
     }
 }
 
-//-----------------------------------------------------------------------------------------------
-//
-void CityModel::GetCityJSONVerticies(rapidjson::Value& jverticies)
-{
-    assert(jverticies.IsArray());
-    m_jverticies = jverticies;
-    assert(jverticies.IsNull());
-}
-
-//-----------------------------------------------------------------------------------------------
-//
-void CityModel::GetCityJSONTransform(rapidjson::Value& /*jtransform*/)
-{
-    //TODO
-}
 
 //-----------------------------------------------------------------------------------------------
 //
@@ -116,6 +102,5 @@ void CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
     printf("%s is %s\n", id, jtype.GetString());
 
     auto& jgeometry = jobject[MEMBER_GEOMETRY];
-    Geometry geom(*this);
-    geom.Convert(jgeometry);
+    m_geometry.Convert(jgeometry);
 }

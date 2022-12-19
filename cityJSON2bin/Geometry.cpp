@@ -13,6 +13,15 @@ void Geometry::Convert(rapidjson::Value& jgeometry)
 
 //-----------------------------------------------------------------------------------------------
 //
+void Geometry::SetCityVerticies(rapidjson::Value& jverticies)
+{
+    assert(jverticies.IsArray());
+    m_jcityVerticies = jverticies;
+    assert(jverticies.IsNull());
+}
+
+//-----------------------------------------------------------------------------------------------
+//
 void Geometry::ConvertItem(rapidjson::Value& jitem)
 {
     auto type = jitem[MEMBER_TYPE].GetString();
