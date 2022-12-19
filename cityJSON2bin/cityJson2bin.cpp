@@ -37,7 +37,7 @@ extern void JsonAssertionError
 #ifdef _DEBUG
     printf("JSON assertion '%s' failed at file %s line %d\n", assertion, file, line);
 #endif
-    ERROR("Unexpected JSON");
+    ERROR("Something unexpected in JSON");
 }
 
 //---------------------------------------------------------------------------------
@@ -74,17 +74,51 @@ void CCityJson2Bin::ReadCityFile(const char* cityFilePath)
 //
 void CCityJson2Bin::ConvertCityJSONObject()
 {
-    auto type = m_cityDOM[MEMBER_TYPE].GetString();
-    if (strcmp(type, TYPE_CityJSON))
+    auto jtype = m_cityDOM[MEMBER_TYPE].GetString();
+    if (strcmp(jtype, TYPE_CityJSON))
         ERROR("Expcected type CityJSON");
 
-    auto strversion = m_cityDOM[MEMBER_VERSION].GetString();
-    auto version = atof(strversion);
+    auto sversion = m_cityDOM[MEMBER_VERSION].GetString();
+    auto version = atof(sversion);
     if (fabs(version - VERSION_1_1) > DBL_MIN)
         ERROR("Unsupported version");
 
-    auto& transform = m_cityDOM[MEMBER_TRANSFORM];
-    //GetCityJSONTransform();
+    auto& jtransform = m_cityDOM[MEMBER_TRANSFORM];
+    GetCityJSONTransform(jtransform);
 
+    auto& jverticies = m_cityDOM[MEMBER_VERTICIES];
+    GetCityJSONVerticies(jverticies);
+
+    for (auto& o : m_cityDOM[MEMBER_CITYOBJECTS].GetObject()) {
+        auto id = o.name.GetString();
+        auto& cityObject = o.value;
+        ConvertCityObject(id, cityObject);
+    }
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void CCityJson2Bin::GetCityJSONVerticies(rapidjson::Value& jverticies)
+{
+    assert(jverticies.IsArray());
+    m_jverticies = jverticies;
+    assert(jverticies.IsNull());
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void CCityJson2Bin::GetCityJSONTransform(rapidjson::Value& /*jtransform*/)
+{
+    //TODO
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void CCityJson2Bin::ConvertCityObject(const char* id, rapidjson::Value& jobject)
+{
+    auto& jtype = jobject[MEMBER_TYPE];
+    printf("%s is %s\n", id, jtype.GetString());
+
+    auto& jgeometry = jobject[MEMBER_GEOMETRY];
 
 }

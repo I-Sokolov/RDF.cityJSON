@@ -7,5 +7,6 @@
 #define MEMBER_TRANSFORM    "transform"
 #define MEMBER_VERTICIES    "vertices"
 #define MEMBER_CITYOBJECTS  "CityObjects"
+#define MEMBER_GEOMETRY     "geometry"
 
 #define TYPE_CityJSON       "CityJSON"

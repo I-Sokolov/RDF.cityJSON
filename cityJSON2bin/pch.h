@@ -10,6 +10,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
+#include <assert.h>
 
 #define RAPIDJSON_ASSERT(x) {if(!(x)) {JsonAssertionError(#x,__FILE__,__LINE__);}}
 extern void JsonAssertionError(const char* assertion, const char* file, int line);
@@ -17,6 +18,7 @@ extern void JsonAssertionError(const char* assertion, const char* file, int line
 #include <rapidjson.h>
 #include <document.h>
 #include <filereadstream.h>
+
 
 #define CITYJSON2BIN_BUILD
 
