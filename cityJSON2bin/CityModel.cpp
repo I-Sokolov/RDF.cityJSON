@@ -96,33 +96,32 @@ void CityModel::ConvertCityJSONObject()
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
+GEOM::Instance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
     auto& jtype = jobject[MEMBER_TYPE];
     printf("%s is %s\n", id, jtype.GetString());
 
     auto& jgeometry = jobject[MEMBER_GEOMETRY];
-    m_geometry.Convert(jgeometry);
+    return m_geometry.Convert(jgeometry);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-OwlClass CityModel::GetOrCreateClass(const char* className, const char* parentName)
+OwlClass CityModel::GetOrCreateClass(const char* names[])
 {
-    auto cls = GetClassByName(m_owlModel, className);
+    if (!names || !names[0]) {
+        return NULL;
+    }
+
+    auto cls = GetClassByName(m_owlModel, names[0]);
     
     if (!cls) {
-        auto parent = GetClassByName(m_owlModel, parentName);
-        if (!parent) {
-            THROW_ERROR("Parent class does not exists");
-        }
+        cls = CreateClass(m_owlModel, names[0]);
 
-        cls = CreateClass(m_owlModel, className);
-        if (!cls) {
-            THROW_ERROR("Failed to create OWL class");
+        auto parent = GetOrCreateClass(names + 1);
+        if (parent) {
+            SetClassParent(cls, parent, 1);
         }
-
-        SetClassParent(cls, parent, 1);
     }
 
     return cls;

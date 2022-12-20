@@ -85,7 +85,8 @@ GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries)
     Vertex2GeomVertex v2v;
     AddListOfSurfaces(boundaries, vert, ind, v2v);
 
-   auto cls = m_cityModel.GetOrCreateClass(TYPE_MultiSurface, OWL_BoundaryRepresentation);
+    const char* clsnames[] = { TYPE_MultiSurface, OWL_BoundaryRepresentation, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
    
    GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
    if (!multiSurface) {

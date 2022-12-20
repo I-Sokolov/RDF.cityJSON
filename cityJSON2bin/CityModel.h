@@ -14,7 +14,7 @@ public:
 
 public:
     OwlModel GetModel() { return m_owlModel; }
-    OwlClass GetOrCreateClass(const char* className, const char* parentName);
+    OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/);
 
 private:
     void ReadCityFile(const char* cityFilePath);
@@ -22,7 +22,7 @@ private:
 
     void ConvertCityJSONObject();
 
-    void ConvertCityObject(const char* id, rapidjson::Value& jobject);
+    GEOM::Instance ConvertCityObject(const char* id, rapidjson::Value& jobject);
 
 private:
     OwlModel                m_owlModel;
