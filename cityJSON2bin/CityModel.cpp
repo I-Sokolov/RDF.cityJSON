@@ -9,14 +9,14 @@
 CityModel::CityModel()
     :m_geometry (*this)
 {
-    m_owlDOM = CreateModel();
+    m_owlModel = CreateModel();
 }
 
 //---------------------------------------------------------------------------------
 //
 CityModel::~CityModel()
 {
-    CloseModel(m_owlDOM);
+    CloseModel(m_owlModel);
 }
 
 
@@ -41,7 +41,7 @@ void CityModel::SaveBinFile(const char* rdfFilePath)
         THROW_ERROR("Filed to open output file");
     fclose(fp);
 
-    auto res = SaveModel(m_owlDOM, rdfFilePath);
+    auto res = SaveModel(m_owlModel, rdfFilePath);
     if (res)
         THROW_ERROR("Failed to write output file");
 }
@@ -103,4 +103,27 @@ void CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 
     auto& jgeometry = jobject[MEMBER_GEOMETRY];
     m_geometry.Convert(jgeometry);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+OwlClass CityModel::GetOrCreateClass(const char* className, const char* parentName)
+{
+    auto cls = GetClassByName(m_owlModel, className);
+    
+    if (!cls) {
+        auto parent = GetClassByName(m_owlModel, parentName);
+        if (!parent) {
+            THROW_ERROR("Parent class does not exists");
+        }
+
+        cls = CreateClass(m_owlModel, className);
+        if (!cls) {
+            THROW_ERROR("Failed to create OWL class");
+        }
+
+        SetClassParent(cls, parent, 1);
+    }
+
+    return cls;
 }

@@ -12,7 +12,8 @@ public:
 public:
     void Convert(const char* cityFilePath, const char* rdfFilePath);
 
-private:
+public:
+    OwlModel GetModel() { return m_owlModel; }
     OwlClass GetOrCreateClass(const char* className, const char* parentName);
 
 private:
@@ -24,7 +25,7 @@ private:
     void ConvertCityObject(const char* id, rapidjson::Value& jobject);
 
 private:
-    OwlModel                m_owlDOM;
+    OwlModel                m_owlModel;
     rapidjson::Document     m_cityDOM;
 
     Geometry                m_geometry;

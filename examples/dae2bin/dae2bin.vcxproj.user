@@ -6,7 +6,19 @@
     <LocalDebuggerCommandArguments>example.dae example.bin</LocalDebuggerCommandArguments>
     <LocalDebuggerWorkingDirectory>D:\tmp\dae2bin\x64\Debug</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoEmbeddedSchema|x64'">
+    <LocalDebuggerCommand>D:\tmp\dae2bin\x64\Debug\dae2binTest.exe</LocalDebuggerCommand>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>example.dae example.bin</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>D:\tmp\dae2bin\x64\Debug</LocalDebuggerWorkingDirectory>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LocalDebuggerCommand>D:\tmp\dae2bin\Debug\dae2binTest.exe</LocalDebuggerCommand>
+    <LocalDebuggerWorkingDirectory>D:\tmp\dae2bin\Debug</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArguments>example.dae example.bin</LocalDebuggerCommandArguments>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_NoEmbeddedSchema|Win32'">
     <LocalDebuggerCommand>D:\tmp\dae2bin\Debug\dae2binTest.exe</LocalDebuggerCommand>
     <LocalDebuggerWorkingDirectory>D:\tmp\dae2bin\Debug</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>

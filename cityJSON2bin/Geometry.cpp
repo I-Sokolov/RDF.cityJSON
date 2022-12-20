@@ -1,13 +1,31 @@
 #include "pch.h"
 #include "CommonDefs.h"
+#include "CityModel.h"
 #include "Geometry.h"
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::Convert(rapidjson::Value& jgeometry)
+GEOM::GeometricItem Geometry::Convert(rapidjson::Value& jgeometry)
 {
-    for (auto& item : jgeometry.GetArray()) {
-        ConvertItem(item);
+    std::vector<GEOM::GeometricItem> items;
+
+    for (auto& jitem : jgeometry.GetArray()) {
+        auto item = ConvertItem(jitem);
+        if (item) {
+            items.push_back(item);
+        }
+    }
+
+    if (items.empty()) {
+        return NULL;
+    }
+    else if (items.size() == 1) {
+        return items.front();
+    }
+    else {
+        auto collection = GEOM::Collection::Create(m_cityModel.GetModel());
+        collection.set_objects(items.data(), items.size());
+        return collection;
     }
 }
 
@@ -22,7 +40,7 @@ void Geometry::SetCityVerticies(rapidjson::Value& jverticies)
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::ConvertItem(rapidjson::Value& jitem)
+GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 {
     auto type = jitem[MEMBER_TYPE].GetString();
     auto& boundaries = jitem[MEMBER_BOUNDARIES];
@@ -34,7 +52,7 @@ void Geometry::ConvertItem(rapidjson::Value& jitem)
         //THROW_ERROR("Unsupported geometry type");
     }
     else if (!strcmp(type, TYPE_MultiSurface)) {
-        ConvertMultiSurface (boundaries);
+        return ConvertMultiSurface (boundaries);
     }
     else if (!strcmp(type, TYPE_CompositeSurface)) {
         //THROW_ERROR("Unsupported geometry type");
@@ -54,20 +72,30 @@ void Geometry::ConvertItem(rapidjson::Value& jitem)
     else {
         //THROW_ERROR("Unknown geometry type");
     }
+
+    return NULL;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::ConvertMultiSurface(rapidjson::Value& boundaries)
+GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries)
 {
     GeomVertecies vert;
     GeomIndicies  ind;
     Vertex2GeomVertex v2v;
     AddListOfSurfaces(boundaries, vert, ind, v2v);
 
-   // auto cls = m_cityModel.GetOrCreateClass(TYPE_MultiSurface, OWL_BoundaryRepresentation);
-   // GEOM::BoundaryRepresentation ms = CreateInstance(cls);
+   auto cls = m_cityModel.GetOrCreateClass(TYPE_MultiSurface, OWL_BoundaryRepresentation);
+   
+   GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
+   if (!multiSurface) {
+       THROW_ERROR("Failed to create " TYPE_MultiSurface " instance");
+   }
 
+   multiSurface.set_vertices(vert.data(), vert.size());
+   multiSurface.set_indices(ind.data(), ind.size());
+
+   return multiSurface;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -103,7 +131,7 @@ void Geometry::AddPoints(rapidjson::Value& jpoints, GeomVertecies& vert, GeomInd
 
 //-----------------------------------------------------------------------------------------------
 //
-int_t Geometry::GetAddVertex(rapidjson::Value& jpoint, GeomVertecies& vert, Vertex2GeomVertex& v2v)
+int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, GeomVertecies& vert, Vertex2GeomVertex& v2v)
 {
     auto jcityVertexInd = jpoint.GetInt();
     
@@ -118,7 +146,7 @@ int_t Geometry::GetAddVertex(rapidjson::Value& jpoint, GeomVertecies& vert, Vert
 
 //-----------------------------------------------------------------------------------------------
 //
-int_t Geometry::AddCityVertx(int jcityVertexInd, GeomVertecies& vert)
+int64_t Geometry::AddCityVertx(int jcityVertexInd, GeomVertecies& vert)
 {
     assert(vert.size() % 3 == 0);
 
