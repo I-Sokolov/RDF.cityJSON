@@ -60,41 +60,73 @@ void Geometry::ConvertItem(rapidjson::Value& jitem)
 //
 void Geometry::ConvertMultiSurface(rapidjson::Value& boundaries)
 {
-    for (auto& bnd : boundaries.GetArray()) {
-        ConvertSurface(bnd);
+    GeomVertecies vert;
+    GeomIndicies  ind;
+    Vertex2GeomVertex v2v;
+    AddListOfSurfaces(boundaries, vert, ind, v2v);
+
+   // auto cls = m_cityModel.GetOrCreateClass(TYPE_MultiSurface, OWL_BoundaryRepresentation);
+   // GEOM::BoundaryRepresentation ms = CreateInstance(cls);
+
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, GeomVertecies& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+{
+    for (auto& loops : jsurfaces.GetArray()) {
+        AddListOfLoops(loops, vert, ind, v2v);
     }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::ConvertSurface(rapidjson::Value& boundaries)
+void Geometry::AddListOfLoops(rapidjson::Value& jloops, GeomVertecies& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
-    bool first = true;
-    for (auto& jloop : boundaries.GetArray()) {
-        Loop loop;
-        GetLoop(loop, jloop);
+    int end = -1;
+    for (auto& jloop : jloops.GetArray()) {
+        AddPoints(jloop, vert, ind, v2v);
+        ind.push_back(end);
+        end = -2;
     }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::GetLoop(Loop& loop, rapidjson::Value& jloop)
+void Geometry::AddPoints(rapidjson::Value& jpoints, GeomVertecies& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
-    printf("loop: ");
-    for (auto& jpoint : jloop.GetArray()) {
-        loop.push_back(Point3D());
-        GetPoint(loop.back(), jpoint);
+    for (auto& jpoint : jpoints.GetArray()) {
+        auto i = GetAddVertex(jpoint, vert, v2v);
+        ind.push_back(i);
     }
-    printf("\n");
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::GetPoint(Point3D& point, rapidjson::Value& jpoint)
+int_t Geometry::GetAddVertex(rapidjson::Value& jpoint, GeomVertecies& vert, Vertex2GeomVertex& v2v)
 {
-    auto ind = jpoint.GetInt();
-    printf(" %d", ind);
+    auto jcityVertexInd = jpoint.GetInt();
+    
+    auto it = v2v.insert(Vertex2GeomVertex::value_type(jcityVertexInd, -1)).first;
+
+    if (it->second < 0) {
+        it->second = AddCityVertx(jcityVertexInd, vert);
+    }
+    
+    return it->second;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+int_t Geometry::AddCityVertx(int jcityVertexInd, GeomVertecies& vert)
+{
+    assert(vert.size() % 3 == 0);
+
+    auto& jpoint = m_jcityVerticies[jcityVertexInd];
     for (int i = 0; i < 3; i++) {
-        point.coord[i] = 0;
+        auto v = jpoint[i].GetDouble();
+        vert.push_back(v);
     }
+
+    return vert.size() / 3 - 1;
 }

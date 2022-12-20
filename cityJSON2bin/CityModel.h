@@ -13,6 +13,9 @@ public:
     void Convert(const char* cityFilePath, const char* rdfFilePath);
 
 private:
+    OwlClass GetOrCreateClass(const char* className, const char* parentName);
+
+private:
     void ReadCityFile(const char* cityFilePath);
     void SaveBinFile(const char* rdfFilePath);
 

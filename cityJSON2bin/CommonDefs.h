@@ -22,6 +22,8 @@
 #define TYPE_CompositeSolid     "CompositeSolid"
 #define TYPE_GeometryInstance   "GeometryInstance"
 
+#define OWL_BoundaryRepresentation      "BoundaryRepresentation"
+
 //====================================================================
 
 extern void THROW_ERROR(const char* error_code);
