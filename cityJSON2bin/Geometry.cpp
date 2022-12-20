@@ -5,9 +5,9 @@
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::Convert(rapidjson::Value& jgeometry)
+void Geometry::Convert(rapidjson::Value& jgeometry, std::vector< GEOM::GeometricItem>& items)
 {
-    std::vector<GEOM::GeometricItem> items;
+    //std::vector<std::string, std::list<GEOM::GeometricItem>> lod2items;
 
     for (auto& jitem : jgeometry.GetArray()) {
         auto item = ConvertItem(jitem);
@@ -15,7 +15,7 @@ GEOM::GeometricItem Geometry::Convert(rapidjson::Value& jgeometry)
             items.push_back(item);
         }
     }
-
+/*
     if (items.empty()) {
         return NULL;
     }
@@ -27,6 +27,7 @@ GEOM::GeometricItem Geometry::Convert(rapidjson::Value& jgeometry)
         collection.set_objects(items.data(), items.size());
         return collection;
     }
+    */
 }
 
 //-----------------------------------------------------------------------------------------------

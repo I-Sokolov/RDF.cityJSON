@@ -9,7 +9,7 @@ public:
 
     void SetCityVerticies(rapidjson::Value& verticies);
 
-    GEOM::GeometricItem Convert(rapidjson::Value& jgeometry);
+    void Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items);
 
 private:
     typedef std::vector<double>   GeomVertecies;

@@ -71,9 +71,13 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 //
 void CityModel::ConvertCityJSONObject()
 {
-    auto jtype = m_cityDOM[MEMBER_TYPE].GetString();
-    if (strcmp(jtype, TYPE_CityJSON))
+    auto type = m_cityDOM[MEMBER_TYPE].GetString();
+    if (strcmp(type, TYPE_CityJSON))
         THROW_ERROR("Expcected type CityJSON");
+    
+    const char* clsname[] = { type , OWL_Collection, NULL };
+    auto cls = GetOrCreateClass(clsname);
+    GEOM::Collection city = CreateInstance(cls);
 
     auto sversion = m_cityDOM[MEMBER_VERSION].GetString();
     auto version = atof(sversion);
@@ -86,23 +90,38 @@ void CityModel::ConvertCityJSONObject()
     auto& jverticies = m_cityDOM[MEMBER_VERTICIES];
     m_geometry.SetCityVerticies(jverticies);
 
+    std::vector<OwlInstance> objects;
     for (auto& o : m_cityDOM[MEMBER_CITYOBJECTS].GetObject()) {
         auto id = o.name.GetString();
         auto& cityObject = o.value;
-        ConvertCityObject(id, cityObject);
+
+        auto instance = ConvertCityObject(id, cityObject);
+        if (instance) {
+            objects.push_back(instance);
+        }
     }
+
+    city.set_objects(objects.data(), objects.size());
 }
 
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Instance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
+OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
     auto& jtype = jobject[MEMBER_TYPE];
-    printf("%s is %s\n", id, jtype.GetString());
+    auto type = jtype.GetString();
+
+    const char* clsname[] = { type , OWL_Collection, NULL };
+    auto cls = GetOrCreateClass(clsname);
+    GEOM::Collection instance = CreateInstance(cls, id);
 
     auto& jgeometry = jobject[MEMBER_GEOMETRY];
-    return m_geometry.Convert(jgeometry);
+    std::vector<GEOM::GeometricItem> items;
+    m_geometry.Convert(jgeometry, items);
+    instance.set_objects(items.data(), items.size());
+
+    return instance;
 }
 
 //-----------------------------------------------------------------------------------------------

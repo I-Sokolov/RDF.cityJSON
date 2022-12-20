@@ -22,7 +22,7 @@ private:
 
     void ConvertCityJSONObject();
 
-    GEOM::Instance ConvertCityObject(const char* id, rapidjson::Value& jobject);
+    OwlInstance ConvertCityObject(const char* id, rapidjson::Value& jobject);
 
 private:
     OwlModel                m_owlModel;

@@ -23,6 +23,7 @@
 #define TYPE_GeometryInstance   "GeometryInstance"
 
 #define OWL_BoundaryRepresentation      "BoundaryRepresentation"
+#define OWL_Collection                  "Collection"
 
 //====================================================================
 
