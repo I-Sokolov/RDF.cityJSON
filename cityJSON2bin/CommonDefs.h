@@ -30,6 +30,7 @@
 #define MEMBER_SEMANTICS        "semantics"
 #define MEMBER_MATERIAL         "material"
 #define MEMBER_TEXTURE          "texture"
+#define MEMBER_VALUES           "values"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"

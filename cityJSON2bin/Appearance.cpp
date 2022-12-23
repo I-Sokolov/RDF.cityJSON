@@ -118,3 +118,78 @@ void Appearance::SetCityVerticiesTextures(rapidjson::Value& jverticies)
     m_textureVerticies = jverticies;
     assert(jverticies.IsNull());
 }
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, int iface)
+{
+    auto pmat = GetValue(jmaterial, m_defaultThemeMaterial, iface);
+    GEOM::Color color;
+    if (pmat)
+        color = GetRdfColor(*pmat);
+
+    auto ptex = GetValue(jtexture, m_defaultThemeTexture, iface);
+    GEOM::Texture tex;
+    if (ptex)
+        tex = GetRdfTexture(*ptex);
+
+    if (color || tex) {
+        auto mat = GEOM::Material::Create(m_cityModel.RdfModel());
+        mat.set_color(color);
+        mat.set_textures(&tex, 1);
+        return mat;
+    }
+    else {
+        return NULL;
+    }
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+rapidjson::Value* Appearance::GetValue(rapidjson::Value& jnode, const char* defaultTheme, int index)
+{
+    rapidjson::Value* theme = nullptr;
+
+    if (!jnode.IsNull()) {
+        if (defaultTheme) {
+            auto it = jnode.FindMember(defaultTheme);
+            if (it != jnode.MemberEnd()) {
+                theme = &(it->value);
+            }
+        }
+
+        if (!theme) {
+            auto it = jnode.MemberBegin();
+            if (it != jnode.MemberEnd()) {
+                theme = &(it->value);
+            }
+        }
+    }
+
+    if (theme) {
+        theme = &((*theme)[MEMBER_VALUES][index]);
+    }
+
+    return theme;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Color Appearance::GetRdfColor(rapidjson::Value& jmat)
+{
+    return 0;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Texture Appearance::GetRdfTexture(rapidjson::Value& jtex)
+{
+    if (jtex.IsArray()) {
+        auto& pt1Texture = jtex[0];
+        int texInd = pt1Texture[0].GetInt();
+        if (texInd < m_textures.size()) {
+
+        }
+    }
+    return 0;
+}

@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "CityModel.h"
+#include "Appearance.h"
 #include "Geometry.h"
 
 //-----------------------------------------------------------------------------------------------
@@ -23,7 +24,7 @@ void Geometry::Convert(rapidjson::Value& jgeometry, std::vector< GEOM::Geometric
         return items.front();
     }
     else {
-        auto collection = GEOM::Collection::Create(m_cityModel.GetModel());
+        auto collection = GEOM::Collection::Create(m_cityModel.RdfModel());
         collection.set_objects(items.data(), items.size());
         return collection;
     }
@@ -177,8 +178,6 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
     face.set_vertices(vert.data(), vert.size());
     face.set_indices(ind.data(), ind.size());
 
-    return face;
-
 #if 0
     std::vector<GEOM::Curve> curves;
     for (auto& jloop : jloops.GetArray()) {
@@ -196,7 +195,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
     auto rcurves = curves.data();
     auto ncurves = curves.size();
 
-    auto face = GEOM::Face2D::Create(m_cityModel.GetModel());
+    auto face = GEOM::Face2D::Create(m_cityModel.RdfModel());
     face.set_outerPolygon(rcurves[0]);
 
     if (ncurves > 1) {
@@ -205,6 +204,13 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
 
     return face;
 #endif
+
+    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(material, texture, iface);
+    if (rdfMat) {
+        face.set_material(rdfMat);
+    }
+
+    return face;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -217,7 +223,7 @@ GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
         AddCityVertx(i, coord);
     }
 
-    auto curve = GEOM::PolyLine3D::Create(m_cityModel.GetModel());
+    auto curve = GEOM::PolyLine3D::Create(m_cityModel.RdfModel());
     curve.set_coordinates(coord);
 
     return curve;

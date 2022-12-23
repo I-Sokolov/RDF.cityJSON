@@ -14,8 +14,9 @@ public:
     void Convert(const char* cityFilePath, const char* rdfFilePath);
 
 public:
-    OwlModel GetModel() { return m_owlModel; }
+    OwlModel RdfModel() { return m_owlModel; }    
     OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/);
+    Appearance& GetAppearance() { return m_appearance; }
 
 private:
     void ReadCityFile(const char* cityFilePath);
