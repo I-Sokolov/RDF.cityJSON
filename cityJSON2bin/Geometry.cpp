@@ -43,8 +43,52 @@ void Geometry::SetCityVerticies(rapidjson::Value& jverticies)
 //
 GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 {
-    auto type = jitem[MEMBER_TYPE].GetString();
-    auto& boundaries = jitem[MEMBER_BOUNDARIES];
+    //
+    //
+    const char* type = nullptr;
+    const char* lod = nullptr;
+    rapidjson::Value boundaries;
+    rapidjson::Value semantics;
+    rapidjson::Value material;
+    rapidjson::Value texture;
+
+    for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
+        const char* memberName = it->name.GetString();
+
+        if (!strcmp(memberName, MEMBER_TYPE)) {
+            type = it->value.GetString();
+        }
+        else if (!strcmp(memberName, MEMBER_LOD)) {
+            lod = it->value.GetString();
+        }
+        else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
+            boundaries = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
+            semantics = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_MATERIAL)) {
+            material = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_TEXTURE)) {
+            texture = it->value;
+        }
+        else {
+            TRACE("Unknown geometry item member: %s\n", memberName);
+        }
+    }
+
+
+    //
+    //
+    if (!type)
+        THROW_ERROR("Geometry item type is missed");
+    if (boundaries.IsNull())
+        THROW_ERROR("Geometry item boundaries are missed");
+
+    //
+    //
+    GEOM::GeometricItem item;
 
     if (!strcmp(type, TYPE_MultiPoint)) {
         TRACE("Unsupported geometry type: %s\n", type);
@@ -53,7 +97,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         TRACE("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_MultiSurface)) {
-        return ConvertMultiSurface (boundaries);
+        item = ConvertMultiSurface(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_CompositeSurface)) {
         TRACE("Unsupported geometry type: %s\n", type);
@@ -74,35 +118,94 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         TRACE("Unsupported geometry type: %s\n", type);
     }
 
-    return NULL;
+    return item;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries)
+GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    GeomVertecies vert;
+    const char* clsnames[] = { TYPE_MultiSurface, OWL_BoundaryRepresentation, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+
+    GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
+    if (!multiSurface) {
+        THROW_ERROR("Failed to create " TYPE_MultiSurface " instance");
+    }
+
+#if 0
+    //faces
+    std::vector<GEOM::Face> faces;
+    for (auto& jface : boundaries.GetArray()) {
+        auto face = ConvertFace(jface);
+        if (face) {
+            faces.push_back(face);
+        }
+    }
+    multiSurface.set_faces(faces.data(), faces.size());
+#else
+    //mesh
+    Coordinates vert;
     GeomIndicies  ind;
     Vertex2GeomVertex v2v;
     AddListOfSurfaces(boundaries, vert, ind, v2v);
 
-    const char* clsnames[] = { TYPE_MultiSurface, OWL_BoundaryRepresentation, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
-   
-   GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
-   if (!multiSurface) {
-       THROW_ERROR("Failed to create " TYPE_MultiSurface " instance");
-   }
+    multiSurface.set_vertices(vert.data(), vert.size());
+    multiSurface.set_indices(ind.data(), ind.size());
+#endif
 
-   multiSurface.set_vertices(vert.data(), vert.size());
-   multiSurface.set_indices(ind.data(), ind.size());
-
-   return multiSurface;
+    return multiSurface;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, GeomVertecies& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+GEOM::Face Geometry::ConvertFace(rapidjson::Value& jloops)
+{
+    std::vector<GEOM::Curve> curves;
+    for (auto& jloop : jloops.GetArray()) {
+        auto curve = ConvertCurve(jloop);
+        if (curve) {
+            curves.push_back(curve);
+        }
+    }
+
+    if (curves.size() < 1) {
+        TRACE("Empty face\n");
+        return NULL;
+    }
+
+    auto rcurves = curves.data();
+    auto ncurves = curves.size();
+
+    auto face = GEOM::Face2D::Create(m_cityModel.GetModel());
+    face.set_outerPolygon(rcurves[0]);
+
+    if (ncurves > 1) {
+        face.set_innerPolygons(rcurves + 1, ncurves - 1);
+    }
+
+    return face;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
+{
+    Coordinates coord;
+    for (auto& ipoint : jloop.GetArray()) {
+        auto i = ipoint.GetInt();
+        AddCityVertx(i, coord);
+    }
+
+    auto curve = GEOM::PolyLine3D::Create(m_cityModel.GetModel());
+    curve.set_coordinates(coord);
+
+    return curve;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
     for (auto& loops : jsurfaces.GetArray()) {
         AddListOfLoops(loops, vert, ind, v2v);
@@ -111,7 +214,7 @@ void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, GeomVertecies& ver
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddListOfLoops(rapidjson::Value& jloops, GeomVertecies& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddListOfLoops(rapidjson::Value& jloops, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
     int end = -1;
     for (auto& jloop : jloops.GetArray()) {
@@ -123,7 +226,7 @@ void Geometry::AddListOfLoops(rapidjson::Value& jloops, GeomVertecies& vert, Geo
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddPoints(rapidjson::Value& jpoints, GeomVertecies& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddPoints(rapidjson::Value& jpoints, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
     for (auto& jpoint : jpoints.GetArray()) {
         auto i = GetAddVertex(jpoint, vert, v2v);
@@ -133,7 +236,7 @@ void Geometry::AddPoints(rapidjson::Value& jpoints, GeomVertecies& vert, GeomInd
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, GeomVertecies& vert, Vertex2GeomVertex& v2v)
+int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, Coordinates& vert, Vertex2GeomVertex& v2v)
 {
     auto jcityVertexInd = jpoint.GetInt();
     
@@ -148,7 +251,7 @@ int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, GeomVertecies& vert, Ve
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::AddCityVertx(int jcityVertexInd, GeomVertecies& vert)
+int64_t Geometry::AddCityVertx(int jcityVertexInd, Coordinates& vert)
 {
     assert(vert.size() % 3 == 0);
 

@@ -26,6 +26,10 @@
 #define MEMBER_CITYOBJECTS      "CityObjects"
 #define MEMBER_GEOMETRY         "geometry"
 #define MEMBER_BOUNDARIES       "boundaries"
+#define MEMBER_LOD              "lod"
+#define MEMBER_SEMANTICS        "semantics"
+#define MEMBER_MATERIAL         "material"
+#define MEMBER_TEXTURE          "texture"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"
