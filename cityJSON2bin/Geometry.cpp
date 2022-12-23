@@ -125,24 +125,27 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 //
 GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    const char* clsnames[] = { TYPE_MultiSurface, OWL_BoundaryRepresentation, NULL };
+    const char* clsnames[] = { TYPE_MultiSurface, OWL_Collection /*OWL_BoundaryRepresentation*/, NULL};
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
-    GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
+    //GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
+    GEOM::Collection multiSurface = CreateInstance(cls);
     if (!multiSurface) {
         THROW_ERROR("Failed to create " TYPE_MultiSurface " instance");
     }
 
-#if 0
+#if 1
     //faces
-    std::vector<GEOM::Face> faces;
+    std::vector<GEOM::GeometricItem> faces;
+    int iface = 0;
     for (auto& jface : boundaries.GetArray()) {
-        auto face = ConvertFace(jface);
+        auto face = ConvertFace(jface, material, texture, iface++);
         if (face) {
             faces.push_back(face);
         }
     }
-    multiSurface.set_faces(faces.data(), faces.size());
+    multiSurface.set_objects(faces.data(), faces.size());
+    //multiSurface.set_faces(faces.data(), faces.size());
 #else
     //mesh
     Coordinates vert;
@@ -159,8 +162,24 @@ GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, 
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Face Geometry::ConvertFace(rapidjson::Value& jloops)
+GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::Value& material, rapidjson::Value& texture, int iface)
 {
+    //mesh
+    Coordinates vert;
+    GeomIndicies  ind;
+    Vertex2GeomVertex v2v;
+    AddListOfLoops(jloops, vert, ind, v2v);
+
+    const char* clsnames[] = { "cityJsonFace", OWL_BoundaryRepresentation, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+
+    GEOM::BoundaryRepresentation face = CreateInstance(cls);
+    face.set_vertices(vert.data(), vert.size());
+    face.set_indices(ind.data(), ind.size());
+
+    return face;
+
+#if 0
     std::vector<GEOM::Curve> curves;
     for (auto& jloop : jloops.GetArray()) {
         auto curve = ConvertCurve(jloop);
@@ -185,6 +204,7 @@ GEOM::Face Geometry::ConvertFace(rapidjson::Value& jloops)
     }
 
     return face;
+#endif
 }
 
 //-----------------------------------------------------------------------------------------------

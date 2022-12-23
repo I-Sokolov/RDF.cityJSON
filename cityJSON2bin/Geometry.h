@@ -26,7 +26,7 @@ private:
     int64_t GetAddVertex(rapidjson::Value& jpoint, Coordinates& vert, Vertex2GeomVertex& v2v);
     int64_t AddCityVertx(int jcityVertexInd, Coordinates& vert);
 
-    GEOM::Face ConvertFace(rapidjson::Value& jloops);
+    GEOM::GeometricItem ConvertFace(rapidjson::Value& jloops, rapidjson::Value& material, rapidjson::Value& texture, int iface);
     GEOM::Curve ConvertCurve(rapidjson::Value& jloop);
 
 private:
