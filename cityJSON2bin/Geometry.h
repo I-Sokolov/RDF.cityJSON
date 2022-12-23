@@ -12,8 +12,8 @@ public:
     void Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items);
 
 private:
-    typedef std::vector<double>   GeomVertecies;
-    typedef std::vector<int64_t>    GeomIndicies;
+    typedef std::vector<double>    GeomVertecies;
+    typedef std::vector<int64_t>   GeomIndicies;
     typedef std::map<int, int64_t> Vertex2GeomVertex;
 
 private:

@@ -4,13 +4,28 @@
 
 #define VERSION_1_1         1.1
 
-#define MEMBER_TYPE         "type"
-#define MEMBER_VERSION      "version"
-#define MEMBER_TRANSFORM    "transform"
-#define MEMBER_VERTICIES    "vertices"
-#define MEMBER_CITYOBJECTS  "CityObjects"
-#define MEMBER_GEOMETRY     "geometry"
-#define MEMBER_BOUNDARIES   "boundaries"
+#define MEMBER_TYPE             "type"
+#define MEMBER_VERSION          "version"
+#define MEMBER_TRANSFORM        "transform"
+#define MEMBER_VERTICIES        "vertices"
+#define MEMBER_APPEARANCE       "appearance"
+#define MEMBER_MATERIALS        "materials"
+#define MEMBER_NAME             "name"
+#define MEMBER_AMBIENT_INTENSITY "ambientIntensity"
+#define MEMBER_DIFFUSE_COLOR    "diffuseColor"
+#define MEMBER_EMMISSIVE_COLOR  "emissiveColor"
+#define MEMBER_SPECULAR_COLOR   "specularColor"
+#define MEMBER_SHININESS        "shininess"
+#define MEMBER_TRANSPARENCY     "transparency"
+#define MEMBER_SMOOTH           "isSmooth"
+#define MEMBER_TEXTURES         "textures"
+#define MEMBER_IMAGE            "image"
+#define MEMBER_TXT_VERTICES     "vertices-texture"
+#define MEMBER_DEF_TXT_THEME    "default-theme-texture"
+#define MEMBER_DEF_MAT_THEME    "default-theme-material"
+#define MEMBER_CITYOBJECTS      "CityObjects"
+#define MEMBER_GEOMETRY         "geometry"
+#define MEMBER_BOUNDARIES       "boundaries"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"
@@ -27,4 +42,17 @@
 
 //====================================================================
 
+#ifdef TRACE
+#undef TRACE
+#endif 
+#ifdef _DEBUG
+    #define TRACE printf
+#else 
+    #define TRACE __noop
+#endif // DEBUG
+
+//====================================================================
+
 extern void THROW_ERROR(const char* error_code);
+
+

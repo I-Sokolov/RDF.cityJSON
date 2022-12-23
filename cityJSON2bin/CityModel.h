@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Geometry.h"
+#include "Appearance.h"
 
 class CityModel
 {
@@ -29,4 +30,5 @@ private:
     rapidjson::Document     m_cityDOM;
 
     Geometry                m_geometry;
+    Appearance              m_appearance;
 };

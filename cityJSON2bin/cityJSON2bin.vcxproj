@@ -267,6 +267,7 @@
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Appearance.h" />
     <ClInclude Include="cityJson2bin.h" />
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="CommonDefs.h" />
@@ -274,6 +275,7 @@
     <ClInclude Include="CityModel.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Appearance.cpp" />
     <ClCompile Include="CityModel.cpp" />
     <ClCompile Include="cityJson2bin.cpp" />
     <ClCompile Include="Geometry.cpp" />

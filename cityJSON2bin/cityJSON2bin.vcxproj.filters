@@ -30,6 +30,9 @@
     <ClInclude Include="Geometry.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Appearance.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -42,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="cityJson2bin.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Appearance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

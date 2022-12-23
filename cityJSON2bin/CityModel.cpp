@@ -7,7 +7,8 @@
 //---------------------------------------------------------------------------------
 //
 CityModel::CityModel()
-    :m_geometry (*this)
+    : m_geometry(*this)
+    , m_appearance(*this)
 {
     m_owlModel = CreateModel();
 }
@@ -77,18 +78,23 @@ void CityModel::ConvertCityJSONObject()
     
     const char* clsname[] = { type , OWL_Collection, NULL };
     auto cls = GetOrCreateClass(clsname);
-    GEOM::Collection city = CreateInstance(cls);
+    GEOM::Collection city = CreateInstance(cls, type);
 
     auto sversion = m_cityDOM[MEMBER_VERSION].GetString();
     auto version = atof(sversion);
     if (fabs(version - VERSION_1_1) > DBL_MIN)
         THROW_ERROR("Unsupported version");
 
-    auto& jtransform = m_cityDOM[MEMBER_TRANSFORM];
+    //auto& jtransform = m_cityDOM[MEMBER_TRANSFORM];
     //TODO SetCityJSONTransform(jtransform);
 
     auto& jverticies = m_cityDOM[MEMBER_VERTICIES];
     m_geometry.SetCityVerticies(jverticies);
+
+    auto itAppearance = m_cityDOM.FindMember(MEMBER_APPEARANCE);
+    if (itAppearance != m_cityDOM.MemberEnd()) {
+        m_appearance.SetCityAppearance(itAppearance->value);
+    }
 
     std::vector<OwlInstance> objects;
     for (auto& o : m_cityDOM[MEMBER_CITYOBJECTS].GetObject()) {
