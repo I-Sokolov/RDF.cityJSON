@@ -53,7 +53,9 @@
     #define TRACE_CNV __noop
 #endif // DEBUG
 
-#define LOG_CNV(msg1, msg2) printf ("%s: %s\n", (msg1), (msg2));
+//====================================================================
+
+extern void LOG_CNV(const char* catergory, const char* msg);
 
 //====================================================================
 

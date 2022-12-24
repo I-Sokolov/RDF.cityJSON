@@ -41,3 +41,18 @@ extern void THROW_ERROR(const char* error_code)
 { 
     throw cityJson2bin_error(error_code); 
 }
+
+//---------------------------------------------------------------------------------
+//
+
+extern void LOG_CNV(const char* catergory, const char* msg)
+{
+    char m[512];
+    snprintf(m, 511, "%s: %s", catergory, msg);
+    
+    static std::set<std::string> shown;
+
+    if (shown.insert(m).second) {
+        printf("%s\n", m);
+    }
+}

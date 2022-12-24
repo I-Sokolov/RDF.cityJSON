@@ -15,6 +15,7 @@
 #include <list>
 #include <vector>
 #include <map>
+#include <set>
 #include <string>
 
 #define RAPIDJSON_ASSERT(x) {if(!(x)) {JsonAssertionError(#x,__FILE__,__LINE__);}}
