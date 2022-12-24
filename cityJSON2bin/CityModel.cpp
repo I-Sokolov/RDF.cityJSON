@@ -89,7 +89,7 @@ void CityModel::ConvertCityJSONObject()
     //TODO SetCityJSONTransform(jtransform);
 
     auto& jverticies = m_cityDOM[MEMBER_VERTICIES];
-    m_geometry.SetCityVerticies(jverticies);
+    m_jcityVerticies = jverticies;
 
     auto itAppearance = m_cityDOM.FindMember(MEMBER_APPEARANCE);
     if (itAppearance != m_cityDOM.MemberEnd()) {

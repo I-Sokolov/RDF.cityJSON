@@ -10,7 +10,7 @@ public:
     void SetCityAppearance(rapidjson::Value& appearance);
 
 public:
-    GEOM::Material GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, int iface);
+    GEOM::Material GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, int iface, rapidjson::Value& jrings);
 
 private:
     void SetCityMaterials(rapidjson::Value& materials);
@@ -42,7 +42,7 @@ private:
 private:
     rapidjson::Value* GetValue(rapidjson::Value& jnode, const char* defaultTheme, int index);
     GEOM::Color GetRdfColor(rapidjson::Value& jmat);
-    GEOM::Texture GetRdfTexture(rapidjson::Value& jtex);
+    GEOM::Texture GetRdfTexture(rapidjson::Value& jtex, rapidjson::Value& jrings);
 
 private:
     CityModel&           m_cityModel;

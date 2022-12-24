@@ -11,7 +11,7 @@ extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
     const char* filePathBin
 )
 {
-    cityJson2bin_error error = 0;
+    cityJson2bin_error error;
 
     try {
         CityModel city;
@@ -27,17 +27,11 @@ extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
 //---------------------------------------------------------------------------------
 //
 
-extern void JsonAssertionError
-#ifdef _DEBUG
-(const char* assertion, const char* file, int line)
-#else
-(const char*, const char*, int)
-#endif
+extern void JsonAssertionError (const char* assertion, const char* file, int line)
 {
-#ifdef _DEBUG
-    printf("JSON assertion '%s' failed at file %s line %d\n", assertion, file, line);
-#endif
-    THROW_ERROR("Something unexpected in JSON");
+    char msg[512];
+    snprintf(msg, 511, "JSON assertion '%s' failed at file %s line %d\n", assertion, file, line);
+    THROW_ERROR(msg);
 }
 
 //---------------------------------------------------------------------------------

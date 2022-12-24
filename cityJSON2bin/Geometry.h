@@ -7,8 +7,6 @@ class Geometry
 public:
     Geometry(CityModel& cityModel) : m_cityModel(cityModel) {}
 
-    void SetCityVerticies(rapidjson::Value& verticies);
-
     void Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items);
 
 private:
@@ -31,6 +29,5 @@ private:
 
 private:
     CityModel&           m_cityModel;
-    rapidjson::Value     m_jcityVerticies;
 };
 

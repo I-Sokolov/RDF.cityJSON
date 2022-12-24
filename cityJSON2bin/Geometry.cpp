@@ -33,15 +33,6 @@ void Geometry::Convert(rapidjson::Value& jgeometry, std::vector< GEOM::Geometric
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::SetCityVerticies(rapidjson::Value& jverticies)
-{
-    assert(jverticies.IsArray());
-    m_jcityVerticies = jverticies;
-    assert(jverticies.IsNull());
-}
-
-//-----------------------------------------------------------------------------------------------
-//
 GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 {
     //
@@ -75,7 +66,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
             texture = it->value;
         }
         else {
-            TRACE("Unknown geometry item member: %s\n", memberName);
+            TRACE_CNV("Unknown geometry item member: %s\n", memberName);
         }
     }
 
@@ -92,31 +83,31 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
     GEOM::GeometricItem item;
 
     if (!strcmp(type, TYPE_MultiPoint)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_MultiLineString)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_MultiSurface)) {
         item = ConvertMultiSurface(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_CompositeSurface)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_Solid)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_MultiSolid)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_CompositeSolid)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_GeometryInstance)) {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else {
-        TRACE("Unsupported geometry type: %s\n", type);
+        TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
 
     return item;
@@ -188,7 +179,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
     }
 
     if (curves.size() < 1) {
-        TRACE("Empty face\n");
+        TRACE_CNV("Empty face\n");
         return NULL;
     }
 
@@ -205,7 +196,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
     return face;
 #endif
 
-    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(material, texture, iface);
+    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(material, texture, iface, jloops);
     if (rdfMat) {
         face.set_material(rdfMat);
     }
@@ -281,7 +272,7 @@ int64_t Geometry::AddCityVertx(int jcityVertexInd, Coordinates& vert)
 {
     assert(vert.size() % 3 == 0);
 
-    auto& jpoint = m_jcityVerticies[jcityVertexInd];
+    auto& jpoint = m_cityModel.GetVertex(jcityVertexInd);
     for (int i = 0; i < 3; i++) {
         auto v = jpoint[i].GetDouble();
         vert.push_back(v);

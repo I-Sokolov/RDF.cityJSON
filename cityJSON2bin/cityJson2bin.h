@@ -22,7 +22,7 @@
 /// <summary>
 /// 
 /// </summary>
-typedef const char* cityJson2bin_error;
+typedef std::string cityJson2bin_error;
 
 
 /// <summary>

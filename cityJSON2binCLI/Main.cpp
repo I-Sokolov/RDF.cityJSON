@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string>
 
 #include "cityJson2bin.h"
 
@@ -29,10 +30,11 @@ int main(int argc, const char* argv[])
             break;
     }
     */
-    if (res) {
-        printf("ERROR: %s\n", res);
+    if (!res.empty()) {
+        printf("ERROR: %s\n", res.c_str());
     }
 
-    return res ? 1 : 0;
+    return res.empty() ? 0 : 1;
 }
+
 

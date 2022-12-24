@@ -47,14 +47,13 @@
 
 //====================================================================
 
-#ifdef TRACE
-#undef TRACE
-#endif 
 #ifdef _DEBUG
-    #define TRACE printf
+    #define TRACE_CNV printf
 #else 
-    #define TRACE __noop
+    #define TRACE_CNV __noop
 #endif // DEBUG
+
+#define LOG_CNV(msg1, msg2) printf ("%s: %s\n", (msg1), (msg2));
 
 //====================================================================
 

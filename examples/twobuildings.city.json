@@ -4,20 +4,6 @@
   "metadata": {
     "geographicalExtent": [ 300578.235, 5041258.061, 13.688, 300618.138, 5041289.394, 29.45 ]
   },
-  "appearance": {
-    "textures": [
-      {
-        "type": "PNG",
-        "image": "http://www.someurl.org/filename.jpg"
-      }
-    ],
-    "vertices-texture": [
-      [ 0.0, 0.5 ],
-      [ 1.0, 0.0 ],
-      [ 1.0, 1.0 ],
-      [ 0.0, 1.0 ]
-    ]
-  },
   "CityObjects": {
     "Building_1": {
       "geometry": [

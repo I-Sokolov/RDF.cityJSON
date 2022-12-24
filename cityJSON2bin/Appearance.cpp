@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "CityModel.h"
+#include "cityJson2bin.h"
 #include "Appearance.h"
 
 
@@ -36,7 +37,7 @@ void Appearance::SetCityAppearance(rapidjson::Value& appearance)
             m_defaultThemeMaterial = it->value.GetString();
         }
         else {
-            TRACE("Unknown appearance member: %s\n", name);
+            TRACE_CNV("Unknown appearance member: %s\n", name);
         }
     }
 }
@@ -84,7 +85,7 @@ void Appearance::SetCityMaterials(rapidjson::Value& materials)
                 m.isSmooth = it->value.GetBool();
             }
             else {
-                TRACE("Unknown transparency attribute: %s\n", memberName);
+                TRACE_CNV("Unknown transparency attribute: %s\n", memberName);
             }
         }
 
@@ -121,7 +122,7 @@ void Appearance::SetCityVerticiesTextures(rapidjson::Value& jverticies)
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, int iface)
+GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, int iface, rapidjson::Value& jrings)
 {
     auto pmat = GetValue(jmaterial, m_defaultThemeMaterial, iface);
     GEOM::Color color;
@@ -131,7 +132,7 @@ GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjso
     auto ptex = GetValue(jtexture, m_defaultThemeTexture, iface);
     GEOM::Texture tex;
     if (ptex)
-        tex = GetRdfTexture(*ptex);
+        tex = GetRdfTexture(*ptex, jrings);
 
     if (color || tex) {
         auto mat = GEOM::Material::Create(m_cityModel.RdfModel());
@@ -167,10 +168,10 @@ rapidjson::Value* Appearance::GetValue(rapidjson::Value& jnode, const char* defa
     }
 
     if (theme) {
-        theme = &((*theme)[MEMBER_VALUES][index]);
+        return &((*theme)[MEMBER_VALUES][index]);
     }
 
-    return theme;
+    return nullptr;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -182,14 +183,44 @@ GEOM::Color Appearance::GetRdfColor(rapidjson::Value& jmat)
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Texture Appearance::GetRdfTexture(rapidjson::Value& jtex)
+GEOM::Texture Appearance::GetRdfTexture(rapidjson::Value& jtex, rapidjson::Value& jrings)
 {
-    if (jtex.IsArray()) {
-        auto& pt1Texture = jtex[0];
-        int texInd = pt1Texture[0].GetInt();
-        if (texInd < m_textures.size()) {
+    GEOM::Texture rdfTexture;
 
+    try {
+        auto& viOuter = jrings[0];  //outer loop vertex indecies
+        auto& texOuter = jtex[0];  //texture for outer loop vertecies
+
+        static Texture defaultTextute{ "JPG", "DefaultTexture.jpg" };
+        Texture* pTexture = &defaultTextute;
+        int texInd = texOuter[0].GetInt();
+        if (texInd < m_textures.size()) {
+            pTexture = &(m_textures[texInd]);
         }
+
+        double uv[2][2] = { {0,0},{1,1} };
+        double xyz[2][3] = { {0,0,0},{1,1,1} };
+        for (int i = 0; i < 2; i++) {
+            auto iptUV = texOuter[i + 1].GetInt();
+            auto& jptUV = m_textureVerticies[iptUV];
+            for (int k = 0; k < 2; k++)
+                uv[i][k] = jptUV[k].GetDouble();
+
+            auto iptXYZ = viOuter[i].GetInt();
+            auto& jptXYZ = m_cityModel.GetVertex(iptXYZ);
+            for (int k = 0; k < 3; k++)
+                xyz[i][k] = jptXYZ[k].GetDouble();
+        }
+
+        rdfTexture = GEOM::Texture::Create(m_cityModel.RdfModel());
+        rdfTexture.set_type(strcmp(pTexture->type, "JPG") ? 2 : 1);
+        rdfTexture.set_name(pTexture->image);
+        TRACE_CNV("TODO textures....\n");
+
     }
-    return 0;
+    catch (cityJson2bin_error expt) {
+        LOG_CNV ("Failed to convert texture", expt.c_str());
+        rdfTexture = 0;
+    }
+    return rdfTexture;
 }
