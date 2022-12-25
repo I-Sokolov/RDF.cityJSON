@@ -81,6 +81,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
     //
     //
     GEOM::GeometricItem item;
+    IntList faceIndexPath;
 
     if (!strcmp(type, TYPE_MultiPoint)) {
         TRACE_CNV("Unsupported geometry type: %s\n", type);
@@ -89,19 +90,19 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
     else if (!strcmp(type, TYPE_MultiSurface)) {
-        item = ConvertMultiSurface(boundaries, material, texture);
+        item = ConvertMultiSurface(boundaries, faceIndexPath, material, texture);
     }
     else if (!strcmp(type, TYPE_CompositeSurface)) {
-        item = ConvertCompositeSurface(boundaries, material, texture);
+        item = ConvertCompositeSurface(boundaries, faceIndexPath, material, texture);
     }
     else if (!strcmp(type, TYPE_Solid)) {
-        item = ConvertSolid(boundaries, material, texture);
+        item = ConvertSolid(boundaries, faceIndexPath, material, texture);
     }
     else if (!strcmp(type, TYPE_MultiSolid)) {
-        item = ConvertMultiSolid(boundaries, material, texture);
+        item = ConvertMultiSolid(boundaries, faceIndexPath, material, texture);
     }
     else if (!strcmp(type, TYPE_CompositeSolid)) {
-        item = ConvertCompositeSolid(boundaries, material, texture);
+        item = ConvertCompositeSolid(boundaries, faceIndexPath, material, texture);
     }
     else if (!strcmp(type, TYPE_GeometryInstance)) {
         TRACE_CNV("Unsupported geometry type: %s\n", type);
@@ -110,37 +111,42 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         TRACE_CNV("Unsupported geometry type: %s\n", type);
     }
 
+    assert(faceIndexPath.empty());
+
     return item;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertCompositeSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertCompositeSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_CompositeSolid, boundaries, material, texture);
+    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_CompositeSolid, boundaries, faceIndexPath, material, texture);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_MultiSolid, boundaries, material, texture);
+    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_MultiSolid, boundaries,faceIndexPath, material, texture);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
     const char* clsnames[] = {className , OWL_Collection, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
     std::vector<GEOM::GeometricItem> solids;
+    faceIndexPath.push_back(0);
     for (auto& jsolid : boundaries.GetArray()) {
-        auto solid = ConvertSolid(jsolid, material, texture);
+        auto solid = ConvertSolid(jsolid, faceIndexPath, material, texture);
         if (solid) {
             solids.push_back(solid);
         }
+        faceIndexPath.back()++;
     }
+    faceIndexPath.pop_back();
 
     GEOM::Collection csolid = CreateInstance(cls);
     csolid.set_objects(solids.data(), solids.size());
@@ -150,18 +156,21 @@ GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
     const char* clsnames[] = { OWL_CityJsonPrefix TYPE_Solid, OWL_Collection, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
     std::vector<GEOM::GeometricItem> shells;
+    faceIndexPath.push_back(0);
     for (auto& jshell : boundaries.GetArray()) {
-        auto shell = ConvertSurfaceSet(TYPE_MultiSurface, jshell, material, texture);
+        auto shell = ConvertSurfaceSet(TYPE_MultiSurface, jshell, faceIndexPath, material, texture);
         if (shell) {
             shells.push_back(shell);
         }
+        faceIndexPath.back()++;
     }
+    faceIndexPath.pop_back();
 
     GEOM::Collection csolid = CreateInstance(cls);
     csolid.set_objects(shells.data(), shells.size());
@@ -171,21 +180,21 @@ GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, rapidjs
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertCompositeSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertCompositeSurface(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_CompositeSurface, boundaries, material, texture);
+    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_CompositeSurface, boundaries, faceIndexPath, material, texture);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_MultiSurface, boundaries, material, texture);
+    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_MultiSurface, boundaries, faceIndexPath, material, texture);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
     const char* clsnames[] = { className , OWL_Collection /*OWL_BoundaryRepresentation*/, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
@@ -199,13 +208,16 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
 #if 1
     //faces
     std::vector<GEOM::GeometricItem> faces;
-    int iface = 0;
+    faceIndexPath.push_back(0);
     for (auto& jface : boundaries.GetArray()) {
-        auto face = ConvertFace(jface, material, texture, iface++);
+        auto face = ConvertFace(jface, faceIndexPath, material, texture);
         if (face) {
             faces.push_back(face);
         }
+        faceIndexPath.back()++;
     }
+    faceIndexPath.pop_back();
+
     multiSurface.set_objects(faces.data(), faces.size());
     //multiSurface.set_faces(faces.data(), faces.size());
 #else
@@ -224,7 +236,7 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::Value& material, rapidjson::Value& texture, int iface)
+GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
 {
     //mesh
     DoubleArray vert;
@@ -266,7 +278,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
     return face;
 #endif
 
-    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(material, texture, iface, jloops);
+    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(material, texture, faceIndexPath, jloops);
     if (rdfMat) {
         face.set_material(rdfMat);
     }

@@ -122,14 +122,14 @@ void Appearance::SetCityVerticiesTextures(rapidjson::Value& jverticies)
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, int iface, rapidjson::Value& jrings)
+GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, IntList& faceIndexPath, rapidjson::Value& jrings)
 {
-    auto pmat = GetValue(jmaterial, m_defaultThemeMaterial, iface);
+    auto pmat = GetValue(jmaterial, m_defaultThemeMaterial, faceIndexPath);
     GEOM::Color color;
     if (pmat)
         color = GetRdfColor(*pmat);
 
-    auto ptex = GetValue(jtexture, m_defaultThemeTexture, iface);
+    auto ptex = GetValue(jtexture, m_defaultThemeTexture, faceIndexPath);
     GEOM::Texture tex;
     if (ptex)
         tex = GetRdfTexture(*ptex, jrings);
@@ -147,7 +147,7 @@ GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjso
 
 //-----------------------------------------------------------------------------------------------
 //
-rapidjson::Value* Appearance::GetValue(rapidjson::Value& jnode, const char* defaultTheme, int index)
+rapidjson::Value* Appearance::GetValue(rapidjson::Value& jnode, const char* defaultTheme, IntList& faceIndexPath)
 {
     rapidjson::Value* theme = nullptr;
 
@@ -168,7 +168,11 @@ rapidjson::Value* Appearance::GetValue(rapidjson::Value& jnode, const char* defa
     }
 
     if (theme) {
-        return &((*theme)[MEMBER_VALUES][index]);
+        auto values = &((*theme)[MEMBER_VALUES]);
+        for (auto i : faceIndexPath) {
+            values = &((*values)[i]);
+        }
+        return values;
     }
 
     return nullptr;
