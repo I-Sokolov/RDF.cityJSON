@@ -48,6 +48,11 @@
 
 //====================================================================
 
+typedef std::list<int>         IntList;
+typedef std::vector<double>    DoubleArray;
+
+//====================================================================
+
 #ifdef _DEBUG
     #define TRACE_CNV printf
 #else 

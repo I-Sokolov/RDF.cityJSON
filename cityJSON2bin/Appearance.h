@@ -4,7 +4,6 @@ class CityModel;
 
 class Appearance
 {
-
 public:
     Appearance(CityModel& cityModel);
 

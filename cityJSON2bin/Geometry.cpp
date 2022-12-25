@@ -227,7 +227,7 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
 GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::Value& material, rapidjson::Value& texture, int iface)
 {
     //mesh
-    Coordinates vert;
+    DoubleArray vert;
     GeomIndicies  ind;
     Vertex2GeomVertex v2v;
     AddListOfLoops(jloops, vert, ind, v2v);
@@ -278,7 +278,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, rapidjson::V
 //
 GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
 {
-    Coordinates coord;
+    DoubleArray coord;
     for (auto& ipoint : jloop.GetArray()) {
         auto i = ipoint.GetInt();
         AddCityVertx(i, coord);
@@ -292,20 +292,20 @@ GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
     for (auto& loops : jsurfaces.GetArray()) {
-        AddListOfLoops(loops, vert, ind, v2v);
+        AddListOfLoops(loops, coordinates, ind, v2v);
     }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddListOfLoops(rapidjson::Value& jloops, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddListOfLoops(rapidjson::Value& jloops, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
     int end = -1;
     for (auto& jloop : jloops.GetArray()) {
-        AddPoints(jloop, vert, ind, v2v);
+        AddPoints(jloop, coordinates, ind, v2v);
         ind.push_back(end);
         end = -2;
     }
@@ -313,24 +313,24 @@ void Geometry::AddListOfLoops(rapidjson::Value& jloops, Coordinates& vert, GeomI
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddPoints(rapidjson::Value& jpoints, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v)
 {
     for (auto& jpoint : jpoints.GetArray()) {
-        auto i = GetAddVertex(jpoint, vert, v2v);
+        auto i = GetAddVertex(jpoint, coordinates, v2v);
         ind.push_back(i);
     }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, Coordinates& vert, Vertex2GeomVertex& v2v)
+int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Vertex2GeomVertex& v2v)
 {
     auto jcityVertexInd = jpoint.GetInt();
     
     auto it = v2v.insert(Vertex2GeomVertex::value_type(jcityVertexInd, -1)).first;
 
     if (it->second < 0) {
-        it->second = AddCityVertx(jcityVertexInd, vert);
+        it->second = AddCityVertx(jcityVertexInd, coordinates);
     }
     
     return it->second;
@@ -338,15 +338,15 @@ int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, Coordinates& vert, Vert
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::AddCityVertx(int jcityVertexInd, Coordinates& vert)
+int64_t Geometry::AddCityVertx(int jcityVertexInd, DoubleArray& coordinates)
 {
-    assert(vert.size() % 3 == 0);
+    assert(coordinates.size() % 3 == 0);
 
     auto& jpoint = m_cityModel.GetVertex(jcityVertexInd);
     for (int i = 0; i < 3; i++) {
         auto v = jpoint[i].GetDouble();
-        vert.push_back(v);
+        coordinates.push_back(v);
     }
 
-    return vert.size() / 3 - 1;
+    return coordinates.size() / 3 - 1;
 }
