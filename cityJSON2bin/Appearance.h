@@ -4,9 +4,11 @@ class CityModel;
 
 class Appearance
 {
+
 public:
     Appearance(CityModel& cityModel);
 
+public:
     void SetCityAppearance(rapidjson::Value& appearance);
 
 public:

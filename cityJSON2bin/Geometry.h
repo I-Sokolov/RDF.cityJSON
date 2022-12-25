@@ -13,10 +13,16 @@ private:
     typedef std::vector<double>    Coordinates;
     typedef std::vector<int64_t>   GeomIndicies;
     typedef std::map<int, int64_t> Vertex2GeomVertex;
-
+    
 private:
     GEOM::GeometricItem ConvertItem(rapidjson::Value& jitem);
+    GEOM::GeometricItem ConvertCompositeSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);    
+    GEOM::GeometricItem ConvertMultiSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);   
+    GEOM::GeometricItem ConvertSolidSet(const char* className, rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);   
+    GEOM::GeometricItem ConvertSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);  
+    GEOM::GeometricItem ConvertCompositeSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);
     GEOM::GeometricItem ConvertMultiSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);
+    GEOM::GeometricItem ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture);
 
     void AddListOfSurfaces(rapidjson::Value& jsurfaces, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v);
     void AddListOfLoops(rapidjson::Value& jloops, Coordinates& vert, GeomIndicies& ind, Vertex2GeomVertex& v2v);

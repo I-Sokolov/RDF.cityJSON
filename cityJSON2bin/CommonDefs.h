@@ -42,6 +42,7 @@
 #define TYPE_CompositeSolid     "CompositeSolid"
 #define TYPE_GeometryInstance   "GeometryInstance"
 
+#define OWL_CityJsonPrefix              "cityJSON."
 #define OWL_BoundaryRepresentation      "BoundaryRepresentation"
 #define OWL_Collection                  "Collection"
 

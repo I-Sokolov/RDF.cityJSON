@@ -92,16 +92,16 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         item = ConvertMultiSurface(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_CompositeSurface)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+        item = ConvertCompositeSurface(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_Solid)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+        item = ConvertSolid(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_MultiSolid)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+        item = ConvertMultiSolid(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_CompositeSolid)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+        item = ConvertCompositeSolid(boundaries, material, texture);
     }
     else if (!strcmp(type, TYPE_GeometryInstance)) {
         TRACE_CNV("Unsupported geometry type: %s\n", type);
@@ -115,9 +115,79 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 
 //-----------------------------------------------------------------------------------------------
 //
+GEOM::GeometricItem Geometry::ConvertCompositeSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+{
+    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_CompositeSolid, boundaries, material, texture);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+{
+    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_MultiSolid, boundaries, material, texture);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+{
+    const char* clsnames[] = {className , OWL_Collection, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+
+    std::vector<GEOM::GeometricItem> solids;
+    for (auto& jsolid : boundaries.GetArray()) {
+        auto solid = ConvertSolid(jsolid, material, texture);
+        if (solid) {
+            solids.push_back(solid);
+        }
+    }
+
+    GEOM::Collection csolid = CreateInstance(cls);
+    csolid.set_objects(solids.data(), solids.size());
+
+    return csolid;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+{
+    const char* clsnames[] = { OWL_CityJsonPrefix TYPE_Solid, OWL_Collection, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+
+    std::vector<GEOM::GeometricItem> shells;
+    for (auto& jshell : boundaries.GetArray()) {
+        auto shell = ConvertSurfaceSet(TYPE_MultiSurface, jshell, material, texture);
+        if (shell) {
+            shells.push_back(shell);
+        }
+    }
+
+    GEOM::Collection csolid = CreateInstance(cls);
+    csolid.set_objects(shells.data(), shells.size());
+
+    return csolid;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::GeometricItem Geometry::ConvertCompositeSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+{
+    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_CompositeSurface, boundaries, material, texture);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
 GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
 {
-    const char* clsnames[] = { TYPE_MultiSurface, OWL_Collection /*OWL_BoundaryRepresentation*/, NULL};
+    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_MultiSurface, boundaries, material, texture);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, rapidjson::Value& material, rapidjson::Value& texture)
+{
+    const char* clsnames[] = { className , OWL_Collection /*OWL_BoundaryRepresentation*/, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
     //GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);

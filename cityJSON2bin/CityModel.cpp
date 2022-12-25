@@ -76,7 +76,7 @@ void CityModel::ConvertCityJSONObject()
     if (strcmp(type, TYPE_CityJSON))
         THROW_ERROR("Expcected type CityJSON");
     
-    const char* clsname[] = { type , OWL_Collection, NULL };
+    const char* clsname[] = { type , OWL_Collection, NULL};
     auto cls = GetOrCreateClass(clsname);
     GEOM::Collection city = CreateInstance(cls, type);
 
@@ -118,7 +118,10 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
     auto& jtype = jobject[MEMBER_TYPE];
     auto type = jtype.GetString();
 
-    const char* clsname[] = { type , OWL_Collection, NULL };
+    std::string owlType(OWL_CityJsonPrefix);
+    owlType.append(type);
+
+    const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL};
     auto cls = GetOrCreateClass(clsname);
     GEOM::Collection instance = CreateInstance(cls, id);
 
