@@ -105,7 +105,8 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         item = ConvertCompositeSolid(boundaries, faceIndexPath, material, texture);
     }
     else if (!strcmp(type, TYPE_GeometryInstance)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+        //TRACE_CNV("Unsupported geometry type: %s\n", type);
+        return 0;
     }
     else {
         TRACE_CNV("Unsupported geometry type: %s\n", type);

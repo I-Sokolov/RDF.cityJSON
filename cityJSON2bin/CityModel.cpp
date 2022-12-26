@@ -2,6 +2,7 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "Geometry.h"
+#include "cityJson2bin.h"
 #include "CityModel.h"
 
 //---------------------------------------------------------------------------------
@@ -115,22 +116,28 @@ void CityModel::ConvertCityJSONObject()
 //
 OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
-    auto& jtype = jobject[MEMBER_TYPE];
-    auto type = jtype.GetString();
+    try {
+        auto& jtype = jobject[MEMBER_TYPE];
+        auto type = jtype.GetString();
 
-    std::string owlType(OWL_CityJsonPrefix);
-    owlType.append(type);
+        std::string owlType(OWL_CityJsonPrefix);
+        owlType.append(type);
 
-    const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL};
-    auto cls = GetOrCreateClass(clsname);
-    GEOM::Collection instance = CreateInstance(cls, id);
+        const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
+        auto cls = GetOrCreateClass(clsname);
+        GEOM::Collection instance = CreateInstance(cls, id);
 
-    auto& jgeometry = jobject[MEMBER_GEOMETRY];
-    std::vector<GEOM::GeometricItem> items;
-    m_geometry.Convert(jgeometry, items);
-    instance.set_objects(items.data(), items.size());
+        auto& jgeometry = jobject[MEMBER_GEOMETRY];
+        std::vector<GEOM::GeometricItem> items;
+        m_geometry.Convert(jgeometry, items);
+        instance.set_objects(items.data(), items.size());
 
-    return instance;
+        return instance;
+    }
+    catch (cityJson2bin_error expt) {
+        LOG_CNV("Failed to convert object", expt.c_str());        
+    }
+    return 0;
 }
 
 //-----------------------------------------------------------------------------------------------
