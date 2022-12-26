@@ -219,7 +219,8 @@ GEOM::Texture Appearance::GetRdfTexture(rapidjson::Value& jtex, rapidjson::Value
         rdfTexture = GEOM::Texture::Create(m_cityModel.RdfModel());
         rdfTexture.set_type(strcmp(pTexture->type, "JPG") ? 2 : 1);
         rdfTexture.set_name(pTexture->image);
-        TRACE_CNV("TODO textures....\n");
+        return 0;
+        //TRACE_CNV("TODO textures....\n");
 
     }
     catch (cityJson2bin_error expt) {
