@@ -21,6 +21,7 @@ private:
 private:
     struct Material
     {
+        const char* name        = nullptr;
         double ambientIntensity = 0;
         double diffuseColor[3]  = {0,0,0};
         double emissiveColor[3] = { 0,0,0 };
@@ -28,9 +29,11 @@ private:
         double shininess        = 0;
         double transparency     = 0;
         bool   isSmooth         = false;
+
+        GEOM::Color rdfColor    = NULL;
     };
 
-    typedef std::map<std::string, Material> Materials;
+    typedef std::vector<Material>         Materials;
 
     struct Texture
     {
@@ -43,6 +46,8 @@ private:
 private:
     rapidjson::Value* GetValue(rapidjson::Value& jnode, const char* defaultTheme, IntList& faceIndexPath);
     GEOM::Color GetRdfColor(rapidjson::Value& jmat);
+    GEOM::ColorComponent CreateColorComponent(double rgb[3], double w = -1);
+    GEOM::Color GetDefaultColor();
     GEOM::Texture GetRdfTexture(rapidjson::Value& jtex, rapidjson::Value& jrings);
 
 private:

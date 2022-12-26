@@ -98,7 +98,12 @@ void CityModel::ConvertCityJSONObject()
     }
 
     std::vector<OwlInstance> objects;
+    int iObject = 0;
     for (auto& o : m_cityDOM[MEMBER_CITYOBJECTS].GetObject()) {
+        iObject++;
+        //if (iObject != 6)
+        //    continue;
+
         auto id = o.name.GetString();
         auto& cityObject = o.value;
 
@@ -116,8 +121,11 @@ void CityModel::ConvertCityJSONObject()
 //
 OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
+    GEOM::Collection instance;
     try {
         auto& jtype = jobject[MEMBER_TYPE];
+        auto& jgeometry = jobject[MEMBER_GEOMETRY];
+
         auto type = jtype.GetString();
 
         std::string owlType(OWL_CityJsonPrefix);
@@ -125,19 +133,17 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
 
         const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
         auto cls = GetOrCreateClass(clsname);
-        GEOM::Collection instance = CreateInstance(cls, id);
+        instance = CreateInstance(cls, id);
 
-        auto& jgeometry = jobject[MEMBER_GEOMETRY];
         std::vector<GEOM::GeometricItem> items;
         m_geometry.Convert(jgeometry, items);
         instance.set_objects(items.data(), items.size());
-
-        return instance;
     }
     catch (cityJson2bin_error expt) {
         LOG_CNV("Failed to convert object", expt.c_str());        
     }
-    return 0;
+
+    return instance;
 }
 
 //-----------------------------------------------------------------------------------------------

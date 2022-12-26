@@ -31,6 +31,7 @@
 #define MEMBER_MATERIAL         "material"
 #define MEMBER_TEXTURE          "texture"
 #define MEMBER_VALUES           "values"
+#define MEMBER_VALUE            "value"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"
