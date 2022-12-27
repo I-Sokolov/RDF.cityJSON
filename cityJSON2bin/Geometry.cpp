@@ -66,7 +66,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
             texture = it->value;
         }
         else {
-            TRACE_CNV("Unknown geometry item member: %s\n", memberName);
+            LOG_CNV("Unsupported geometry item member", memberName);
         }
     }
 

@@ -73,33 +73,44 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 //
 void CityModel::ConvertCityJSONObject()
 {
-    auto type = m_cityDOM[MEMBER_TYPE].GetString();
-    if (strcmp(type, TYPE_CityJSON))
-        THROW_ERROR("Expcected type CityJSON");
-    
-    const char* clsname[] = { type , OWL_Collection, NULL};
-    auto cls = GetOrCreateClass(clsname);
-    GEOM::Collection city = CreateInstance(cls, type);
+    const char*         type        = nullptr;
+    const char*         version     = nullptr;
+    rapidjson::Value    transform;
+    rapidjson::Value    cityObjects;
 
-    auto sversion = m_cityDOM[MEMBER_VERSION].GetString();
-    auto version = atof(sversion);
-    if (fabs(version - VERSION_1_1) > DBL_MIN)
-        THROW_ERROR("Unsupported version");
-
-    //auto& jtransform = m_cityDOM[MEMBER_TRANSFORM];
-    //TODO SetCityJSONTransform(jtransform);
-
-    auto& jverticies = m_cityDOM[MEMBER_VERTICIES];
-    m_jcityVerticies = jverticies;
-
-    auto itAppearance = m_cityDOM.FindMember(MEMBER_APPEARANCE);
-    if (itAppearance != m_cityDOM.MemberEnd()) {
-        m_appearance.SetCityAppearance(itAppearance->value);
+    for (auto& member : m_cityDOM.GetObject()) {
+        auto memberName = member.name.GetString();
+        if (!strcmp(memberName, MEMBER_TYPE)) {
+            type = member.value.GetString();
+        }
+        else if (!strcmp(memberName, MEMBER_VERSION)) {
+            version = member.value.GetString();
+        }
+        else if (!strcmp(memberName, MEMBER_VERTICIES)) {
+            m_jcityVerticies = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_APPEARANCE)) {
+            m_appearance.SetCityAppearance(member.value);
+        }
+        else if (!strcmp(memberName, MEMBER_TRANSFORM)) {
+            transform = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_CITYOBJECTS)) {
+            cityObjects = member.value;
+        }
+        else {
+            LOG_CNV("Unsupported cityJSON member", memberName);
+        }
     }
 
-    std::vector<OwlInstance> objects;
+    if (!type || strcmp(type, TYPE_CityJSON))
+        THROW_ERROR("Expcected type CityJSON");
+    if (!version || fabs(atof(version) - VERSION_1_1) > DBL_MIN)
+        THROW_ERROR("Unsupported version");
+
+    std::vector<OwlInstance> owlObjects;
     int iObject = 0;
-    for (auto& o : m_cityDOM[MEMBER_CITYOBJECTS].GetObject()) {
+    for (auto& o : cityObjects.GetObject()) {
         iObject++;
         //if (iObject != 6)
         //    continue;
@@ -109,11 +120,17 @@ void CityModel::ConvertCityJSONObject()
 
         auto instance = ConvertCityObject(id, cityObject);
         if (instance) {
-            objects.push_back(instance);
+            owlObjects.push_back(instance);
         }
     }
 
-    city.set_objects(objects.data(), objects.size());
+    const char* clsname[] = { type , OWL_Collection, NULL};
+    auto cls = GetOrCreateClass(clsname);
+    GEOM::Collection city = CreateInstance(cls, type);
+
+    //TODO SetCityJSONTransform(jtransform);
+
+    city.set_objects(owlObjects.data(), owlObjects.size());
 }
 
 
@@ -121,26 +138,40 @@ void CityModel::ConvertCityJSONObject()
 //
 OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
 {
-    GEOM::Collection instance;
-    try {
-        auto& jtype = jobject[MEMBER_TYPE];
-        auto& jgeometry = jobject[MEMBER_GEOMETRY];
+    rapidjson::Value jtype;
+    rapidjson::Value jgeometry;
+    
+    for (auto& member : jobject.GetObject()) {
+        auto memberName = member.name.GetString();
+        if (!strcmp(memberName, MEMBER_TYPE)) {
+            jtype = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_GEOMETRY)) {
+            jgeometry = member.value;
+        }
+        else {
+            LOG_CNV("Unsupported city object member", memberName);
+        }
+    }
 
-        auto type = jtype.GetString();
+    auto type = jtype.GetString();
+    //if (!_stricmp(type, "TINRelief"))
+    //    return 0;
 
-        std::string owlType(OWL_CityJsonPrefix);
-        owlType.append(type);
+    std::string owlType(OWL_CityJsonPrefix);
+    owlType.append(type);
 
-        const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
-        auto cls = GetOrCreateClass(clsname);
-        instance = CreateInstance(cls, id);
+    const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
+    auto cls = GetOrCreateClass(clsname);
+    GEOM::Collection instance = CreateInstance(cls, id);
 
+    if (jgeometry.IsArray()) {
         std::vector<GEOM::GeometricItem> items;
         m_geometry.Convert(jgeometry, items);
         instance.set_objects(items.data(), items.size());
     }
-    catch (cityJson2bin_error expt) {
-        LOG_CNV("Failed to convert object", expt.c_str());        
+    else {
+        LOG_CNV("City object has no geometry", type);
     }
 
     return instance;
