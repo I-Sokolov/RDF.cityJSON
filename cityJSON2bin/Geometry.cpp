@@ -43,6 +43,8 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
     rapidjson::Value semantics;
     rapidjson::Value material;
     rapidjson::Value texture;
+    rapidjson::Value jtemplate;
+    rapidjson::Value jtransformation;
 
     for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
         const char* memberName = it->name.GetString();
@@ -64,6 +66,12 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         }
         else if (!strcmp(memberName, MEMBER_TEXTURE)) {
             texture = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
+            jtemplate = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_TRANSFORMATION)) {
+            jtransformation = it->value;
         }
         else {
             LOG_CNV("Unsupported geometry item member", memberName);

@@ -95,6 +95,12 @@ void CityModel::ConvertCityJSONObject()
         else if (!strcmp(memberName, MEMBER_TRANSFORM)) {
             transform = member.value;
         }
+        else if (!strcmp(memberName, MEMBER_GEOM_TEMPLATES)) {
+            printf("%s\n", MEMBER_GEOM_TEMPLATES);
+            for (auto& m : member.value.GetObject()) {
+                printf("   %s\n", m.name.GetString());
+            }
+        }
         else if (!strcmp(memberName, MEMBER_CITYOBJECTS)) {
             cityObjects = member.value;
         }
