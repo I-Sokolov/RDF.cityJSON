@@ -4212,13 +4212,20 @@
           "semantics": {
             "surfaces": [
               {
-                "type": "GroundSurface"
+                "type": "GroundSurface",
+                "parent": 3,
+                "splope": 0
               },
               {
-                "type": "WallSurface"
+                "type": "WallSurface",
+                "loadbearing": true
               },
               {
                 "type": "RoofSurface"
+              },
+              {
+                "type": "+Boundary",
+                "children": [1,2]
               }
             ],
             "values": [

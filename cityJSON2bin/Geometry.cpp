@@ -3,6 +3,7 @@
 #include "CommonDefs.h"
 #include "CityModel.h"
 #include "Appearance.h"
+#include "Semantics.h"
 #include "Geometry.h"
 
 //-----------------------------------------------------------------------------------------------
@@ -48,11 +49,11 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         const char* type = nullptr;
         const char* lod = nullptr;
         rapidjson::Value boundaries;
-        rapidjson::Value semantics;
         rapidjson::Value material;
         rapidjson::Value texture;
         rapidjson::Value jtemplate;
         rapidjson::Value jtransformation;
+        Semantics        semantics (m_cityModel);
 
         for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
             const char* memberName = it->name.GetString();
@@ -66,9 +67,6 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
             else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
                 boundaries = it->value;
             }
-            else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
-                semantics = it->value;
-            }
             else if (!strcmp(memberName, MEMBER_MATERIAL)) {
                 material = it->value;
             }
@@ -80,6 +78,9 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
             }
             else if (!strcmp(memberName, MEMBER_TRANSFORMATION)) {
                 jtransformation = it->value;
+            }
+            else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
+                semantics.Init(it->value);
             }
             else {
                 LOG_CNV("Unsupported geometry item member", memberName);

@@ -273,6 +273,7 @@
     <ClInclude Include="CommonDefs.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="CityModel.h" />
+    <ClInclude Include="Semantics.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Appearance.cpp" />
@@ -287,6 +288,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Semantics.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="UpdateEngine.bat" />
