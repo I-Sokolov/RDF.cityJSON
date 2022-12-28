@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "CommonDefs.h"
+#include "CityModel.h"
 #include "Semantics.h"
 
 //-----------------------------------------------------------------------------------------------
@@ -72,13 +73,86 @@ void Semantics::Init(rapidjson::Value& semantics)
             }
             child.parent = iParent;
         }
+
+        parent.children.clear();
     }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
 
-int64_t Semantics::GetSurfaceSemantic(IntList faceIndexPath)
+int64_t Semantics::GetSurfaceSemantic(UIntList faceIndexPath)
 {
-    return 0;
+    auto values = &m_values;
+    for (auto i : faceIndexPath) {
+        if (values->IsArray() && values->GetArray().Size() > i)
+            values = &((*values)[i]);
+    }
+
+    if (!values->IsInt()) {
+        return 0;
+    }
+
+    int i = values->GetInt();
+    if (i < 0 || i >= m_surfaces.size()) {
+        LOG_CNV("Semantic surface index is out of range","");
+        return 0;
+    }
+
+    auto& surf = m_surfaces[i];
+
+    return GetOwlInstance(surf);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+int64_t Semantics::GetOwlInstance(Surface& surf)
+{
+    if (!surf.type.IsNull()) {
+
+        const char* clsname[] = { OWL_CityJsonPrefix "SurfaceSemantic", NULL };
+        auto cls = m_cityModel.GetOrCreateClass(clsname);
+        surf.owlInstance = CreateInstance(cls);
+
+        auto prop = m_cityModel.GetOrCreateProperty(cls, "cityJSON_Type", DATATYPEPROPERTY_TYPE_CHAR);
+        const char* type = surf.type.GetString();
+        SetDatatypeProperty(surf.owlInstance, prop, type);
+
+        if (surf.parent >= 0 && surf.parent < m_surfaces.size()) {
+            auto& parent = m_surfaces[surf.parent];
+            auto owlParent = GetOwlInstance(parent);
+            if (owlParent) {
+                prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_PARENT, OBJECTPROPERTY_TYPE);
+                SetObjectProperty(surf.owlInstance, prop, owlParent);
+            }
+        }
+
+        for (auto& attr : surf.attributes) {
+            auto name = attr.name.GetString();
+            auto ktype = attr.value.GetType();
+            switch (ktype) {
+                case rapidjson::kStringType:
+                {
+                    auto val = attr.value.GetString();
+                    prop = m_cityModel.GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_CHAR);
+                    SetDatatypeProperty(surf.owlInstance, prop, val);
+                    break;
+                }
+                case rapidjson::kNumberType:
+                {
+                    auto val = attr.value.GetDouble();
+                    prop = m_cityModel.GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE);
+                    SetDatatypeProperty(surf.owlInstance, prop, val);
+                    break;
+                }
+                default:
+                    LOG_CNV("Unsupported attribte type", "for semantic sutface");
+            }
+        }
+
+        surf.attributes.clear();
+        surf.type.SetNull();
+    }
+
+    return surf.owlInstance;
 }

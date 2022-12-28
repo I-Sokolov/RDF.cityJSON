@@ -16,6 +16,7 @@ public:
 public:
     OwlModel RdfModel() { return m_owlModel; }    
     OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/);
+    RdfProperty GetOrCreateProperty(OwlClass cls, const char* propName, RdfPropertyType propType, int64_t minCard = 0, int64_t maxCard = 1, int attempt = 0);
 
     Appearance& GetAppearance() { return m_appearance; }
     Geometry& GetGeometry() { return m_geometry; }

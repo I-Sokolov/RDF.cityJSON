@@ -4214,7 +4214,8 @@
               {
                 "type": "GroundSurface",
                 "parent": 3,
-                "splope": 0
+                "NumericValue": 20,
+                "StringValue" : "my text"
               },
               {
                 "type": "WallSurface",

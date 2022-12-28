@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Semantics.h"
 class CityModel;
 
 class Geometry
@@ -27,15 +28,25 @@ private:
 
     typedef std::vector<Template> Templates;
 
+    struct PerFaceData
+    {
+        PerFaceData(CityModel& cityModel) : semantics(cityModel) {}
+
+        rapidjson::Value material;
+        rapidjson::Value texture;
+        Semantics        semantics;
+        UIntList         indexPath;
+    };
+
 private:
     GEOM::GeometricItem ConvertItem(rapidjson::Value& jitem);
-    GEOM::GeometricItem ConvertCompositeSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);    
-    GEOM::GeometricItem ConvertMultiSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
-    GEOM::GeometricItem ConvertSolidSet(const char* className, rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
-    GEOM::GeometricItem ConvertSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
-    GEOM::GeometricItem ConvertCompositeSurface(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
-    GEOM::GeometricItem ConvertMultiSurface(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
-    GEOM::GeometricItem ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
+    GEOM::GeometricItem ConvertCompositeSolid(rapidjson::Value& boundaries, PerFaceData& fd);    
+    GEOM::GeometricItem ConvertMultiSolid(rapidjson::Value& boundaries, PerFaceData& fd);
+    GEOM::GeometricItem ConvertSolidSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd);
+    GEOM::GeometricItem ConvertSolid(rapidjson::Value& boundaries, PerFaceData& fd);
+    GEOM::GeometricItem ConvertCompositeSurface(rapidjson::Value& boundaries, PerFaceData& fd);
+    GEOM::GeometricItem ConvertMultiSurface(rapidjson::Value& boundaries, PerFaceData& fd);
+    GEOM::GeometricItem ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd);
 
     void AddListOfSurfaces(rapidjson::Value& jsurfaces, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v);
     void AddListOfLoops(rapidjson::Value& jloops, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v);
@@ -45,7 +56,7 @@ private:
 
     void UseTemplateVerticies(bool use) { m_bUseTemplateVerticies = use; }
 
-    GEOM::GeometricItem ConvertFace(rapidjson::Value& jloops, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture);
+    GEOM::GeometricItem ConvertFace(rapidjson::Value& jloops, PerFaceData& fd);
     GEOM::Curve ConvertCurve(rapidjson::Value& jloop);
 
     GEOM::GeometricItem ConvertGeometryInstance(rapidjson::Value& boundaries, rapidjson::Value& jtemplate, rapidjson::Value& jtransformation);

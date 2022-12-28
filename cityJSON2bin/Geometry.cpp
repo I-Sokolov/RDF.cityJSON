@@ -49,11 +49,9 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         const char* type = nullptr;
         const char* lod = nullptr;
         rapidjson::Value boundaries;
-        rapidjson::Value material;
-        rapidjson::Value texture;
         rapidjson::Value jtemplate;
         rapidjson::Value jtransformation;
-        Semantics        semantics (m_cityModel);
+        PerFaceData      fd (m_cityModel);
 
         for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
             const char* memberName = it->name.GetString();
@@ -68,10 +66,10 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
                 boundaries = it->value;
             }
             else if (!strcmp(memberName, MEMBER_MATERIAL)) {
-                material = it->value;
+                fd.material = it->value;
             }
             else if (!strcmp(memberName, MEMBER_TEXTURE)) {
-                texture = it->value;
+                fd.texture = it->value;
             }
             else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
                 jtemplate = it->value;
@@ -80,7 +78,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
                 jtransformation = it->value;
             }
             else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
-                semantics.Init(it->value);
+                fd.semantics.Init(it->value);
             }
             else {
                 LOG_CNV("Unsupported geometry item member", memberName);
@@ -97,7 +95,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 
         //
         //
-        IntList faceIndexPath;
+        UIntList faceIndexPath;
 
         if (!strcmp(type, TYPE_MultiPoint)) {
             LOG_CNV("Unsupported geometry type", type);
@@ -106,19 +104,19 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
             LOG_CNV("Unsupported geometry type", type);
         }
         else if (!strcmp(type, TYPE_MultiSurface)) {
-            item = ConvertMultiSurface(boundaries, faceIndexPath, material, texture);
+            item = ConvertMultiSurface(boundaries, fd);
         }
         else if (!strcmp(type, TYPE_CompositeSurface)) {
-            item = ConvertCompositeSurface(boundaries, faceIndexPath, material, texture);
+            item = ConvertCompositeSurface(boundaries, fd);
         }
         else if (!strcmp(type, TYPE_Solid)) {
-            item = ConvertSolid(boundaries, faceIndexPath, material, texture);
+            item = ConvertSolid(boundaries, fd);
         }
         else if (!strcmp(type, TYPE_MultiSolid)) {
-            item = ConvertMultiSolid(boundaries, faceIndexPath, material, texture);
+            item = ConvertMultiSolid(boundaries, fd);
         }
         else if (!strcmp(type, TYPE_CompositeSolid)) {
-            item = ConvertCompositeSolid(boundaries, faceIndexPath, material, texture);
+            item = ConvertCompositeSolid(boundaries, fd);
         }
         else if (!strcmp(type, TYPE_GeometryInstance)) {
             item = ConvertGeometryInstance(boundaries, jtemplate, jtransformation);
@@ -139,35 +137,35 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertCompositeSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertCompositeSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_CompositeSolid, boundaries, faceIndexPath, material, texture);
+    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_CompositeSolid, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_MultiSolid, boundaries,faceIndexPath, material, texture);
+    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_MultiSolid, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd)
 {
     const char* clsnames[] = {className , OWL_Collection, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
     std::vector<GEOM::GeometricItem> solids;
-    faceIndexPath.push_back(0);
+    fd.indexPath.push_back(0);
     for (auto& jsolid : boundaries.GetArray()) {
-        auto solid = ConvertSolid(jsolid, faceIndexPath, material, texture);
+        auto solid = ConvertSolid(jsolid, fd);
         if (solid) {
             solids.push_back(solid);
         }
-        faceIndexPath.back()++;
+        fd.indexPath.back()++;
     }
-    faceIndexPath.pop_back();
+    fd.indexPath.pop_back();
 
     GEOM::Collection csolid = CreateInstance(cls);
     csolid.set_objects(solids.data(), solids.size());
@@ -177,21 +175,21 @@ GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
     const char* clsnames[] = { OWL_CityJsonPrefix TYPE_Solid, OWL_Collection, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
     std::vector<GEOM::GeometricItem> shells;
-    faceIndexPath.push_back(0);
+    fd.indexPath.push_back(0);
     for (auto& jshell : boundaries.GetArray()) {
-        auto shell = ConvertSurfaceSet(TYPE_MultiSurface, jshell, faceIndexPath, material, texture);
+        auto shell = ConvertSurfaceSet(TYPE_MultiSurface, jshell, fd);
         if (shell) {
             shells.push_back(shell);
         }
-        faceIndexPath.back()++;
+        fd.indexPath.back()++;
     }
-    faceIndexPath.pop_back();
+    fd.indexPath.pop_back();
 
     GEOM::Collection csolid = CreateInstance(cls);
     csolid.set_objects(shells.data(), shells.size());
@@ -201,21 +199,21 @@ GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, IntList
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertCompositeSurface(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertCompositeSurface(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_CompositeSurface, boundaries, faceIndexPath, material, texture);
+    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_CompositeSurface, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_MultiSurface, boundaries, faceIndexPath, material, texture);
+    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_MultiSurface, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd)
 {
     const char* clsnames[] = { className , OWL_Collection /*OWL_BoundaryRepresentation*/, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
@@ -229,15 +227,15 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
 #if 1
     //faces
     std::vector<GEOM::GeometricItem> faces;
-    faceIndexPath.push_back(0);
+    fd.indexPath.push_back(0);
     for (auto& jface : boundaries.GetArray()) {
-        auto face = ConvertFace(jface, faceIndexPath, material, texture);
+        auto face = ConvertFace(jface, fd);
         if (face) {
             faces.push_back(face);
         }
-        faceIndexPath.back()++;
+        fd.indexPath.back()++;
     }
-    faceIndexPath.pop_back();
+    fd.indexPath.pop_back();
 
     multiSurface.set_objects(faces.data(), faces.size());
     //multiSurface.set_faces(faces.data(), faces.size());
@@ -257,7 +255,7 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, IntList& faceIndexPath, rapidjson::Value& material, rapidjson::Value& texture)
+GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, PerFaceData& fd)
 {
     //mesh
     DoubleArray vert;
@@ -299,9 +297,15 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, IntList& fac
     return face;
 #endif
 
-    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(material, texture, faceIndexPath, jloops);
+    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(fd.material, fd.texture, fd.indexPath, jloops);
     if (rdfMat) {
         face.set_material(rdfMat);
+    }
+
+    auto semantic = fd.semantics.GetSurfaceSemantic(fd.indexPath);
+    if (semantic) {
+        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE);
+        SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 
     return face;

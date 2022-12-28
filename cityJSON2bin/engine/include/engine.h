@@ -42,6 +42,7 @@ typedef		int64_t								OwlModel;
 typedef		int64_t								OwlClass;
 typedef		int64_t								OwlInstance;
 typedef		int64_t								RdfProperty;
+typedef     int64_t								RdfPropertyType;
 typedef		RdfProperty							OwlDatatypeProperty;
 typedef		RdfProperty							OwlObjectProperty;
 typedef		int64_t								ConceptualFace;
@@ -2221,9 +2222,9 @@ static	inline	wchar_t	* GetNameOfPropertyWEx(
 //	the type, normally this corresponds with the propertyType requested
 //	to be set unless the property already has a different propertyType set before.
 //
-int64_t		DECL STDC	SetPropertyType(
+RdfPropertyType		DECL STDC	SetPropertyType(
 									RdfProperty				rdfProperty,
-									int64_t					propertyType
+									RdfPropertyType			propertyType
 								);
 
 //

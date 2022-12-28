@@ -204,3 +204,37 @@ OwlClass CityModel::GetOrCreateClass(const char* names[])
 
     return cls;
 }
+
+
+//-----------------------------------------------------------------------------------------------
+//
+RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, RdfPropertyType propType, int64_t minCard, int64_t maxCard, int attempt)
+{
+    //std::string fullPropName = GetNameOfClass(cls);
+    //fullPropName.append(".");
+    //fullPropName.append(propName);
+    std::string fullPropName (propName);
+    if (attempt > 0) {
+        char attmpt[64];
+        sprintf(attmpt, "_cityJson%d", attempt);
+        fullPropName.append(attmpt);
+    }
+
+    auto prop = GetPropertyByName(m_owlModel, fullPropName.c_str());
+    if (prop) {
+        auto ptype = GetPropertyType(prop);
+        int64_t minC = 0;
+        int64_t maxC = 0;
+        GetClassPropertyCardinalityRestriction(cls, prop, &minC, &maxC);
+        if (ptype != propType || minC != minCard || maxC != maxCard) {
+            LOG_CNV("Porperty exists but traits mismatches", fullPropName.c_str());
+            prop = GetOrCreateProperty(cls, propName, propType, minCard, maxCard, attempt + 1);
+        }
+    }
+    else {
+        prop = CreateProperty(m_owlModel, propType, fullPropName.c_str());
+        SetClassPropertyCardinalityRestriction(cls, prop, minCard, maxCard);
+    }
+
+    return prop;
+}

@@ -58,8 +58,8 @@
 
 //====================================================================
 
-typedef std::list<int>         IntList;
-typedef std::vector<double>    DoubleArray;
+typedef std::list<unsigned int> UIntList;
+typedef std::vector<double>     DoubleArray;
 
 //====================================================================
 
