@@ -17,8 +17,8 @@ public:
     OwlModel RdfModel() { return m_owlModel; }    
     OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/);
 
-    const rapidjson::Value& GetVertex(int ind) { return m_jcityVerticies[ind]; }
     Appearance& GetAppearance() { return m_appearance; }
+    Geometry& GetGeometry() { return m_geometry; }
 
 private:
     void ReadCityFile(const char* cityFilePath);
@@ -32,7 +32,6 @@ private:
     OwlModel                m_owlModel;
     rapidjson::Document     m_cityDOM;
 
-    rapidjson::Value        m_jcityVerticies;
     Geometry                m_geometry;
     Appearance              m_appearance;
 };

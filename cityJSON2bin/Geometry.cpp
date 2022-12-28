@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "cityJson2bin.h"
 #include "CommonDefs.h"
 #include "CityModel.h"
 #include "Appearance.h"
@@ -6,11 +7,15 @@
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::Convert(rapidjson::Value& jgeometry, std::vector< GEOM::GeometricItem>& items)
+void Geometry::Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items)
 {
     //std::vector<std::string, std::list<GEOM::GeometricItem>> lod2items;
 
     for (auto& jitem : jgeometry.GetArray()) {
+        //auto type = jitem[MEMBER_TYPE].GetString();
+        //if (strcmp(type, TYPE_GeometryInstance))
+        //    continue;
+
         auto item = ConvertItem(jitem);
         if (item) {
             items.push_back(item);
@@ -35,92 +40,98 @@ void Geometry::Convert(rapidjson::Value& jgeometry, std::vector< GEOM::Geometric
 //
 GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 {
-    //
-    //
-    const char* type = nullptr;
-    const char* lod = nullptr;
-    rapidjson::Value boundaries;
-    rapidjson::Value semantics;
-    rapidjson::Value material;
-    rapidjson::Value texture;
-    rapidjson::Value jtemplate;
-    rapidjson::Value jtransformation;
+    GEOM::GeometricItem item;
 
-    for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
-        const char* memberName = it->name.GetString();
+    try {
+        //
+        //
+        const char* type = nullptr;
+        const char* lod = nullptr;
+        rapidjson::Value boundaries;
+        rapidjson::Value semantics;
+        rapidjson::Value material;
+        rapidjson::Value texture;
+        rapidjson::Value jtemplate;
+        rapidjson::Value jtransformation;
 
-        if (!strcmp(memberName, MEMBER_TYPE)) {
-            type = it->value.GetString();
+        for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
+            const char* memberName = it->name.GetString();
+
+            if (!strcmp(memberName, MEMBER_TYPE)) {
+                type = it->value.GetString();
+            }
+            else if (!strcmp(memberName, MEMBER_LOD)) {
+                lod = it->value.GetString();
+            }
+            else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
+                boundaries = it->value;
+            }
+            else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
+                semantics = it->value;
+            }
+            else if (!strcmp(memberName, MEMBER_MATERIAL)) {
+                material = it->value;
+            }
+            else if (!strcmp(memberName, MEMBER_TEXTURE)) {
+                texture = it->value;
+            }
+            else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
+                jtemplate = it->value;
+            }
+            else if (!strcmp(memberName, MEMBER_TRANSFORMATION)) {
+                jtransformation = it->value;
+            }
+            else {
+                LOG_CNV("Unsupported geometry item member", memberName);
+            }
         }
-        else if (!strcmp(memberName, MEMBER_LOD)) {
-            lod = it->value.GetString();
+
+
+        //
+        //
+        if (!type)
+            THROW_ERROR("Geometry item type is missed");
+        if (boundaries.IsNull())
+            THROW_ERROR("Geometry item boundaries are missed");
+
+        //
+        //
+        IntList faceIndexPath;
+
+        if (!strcmp(type, TYPE_MultiPoint)) {
+            LOG_CNV("Unsupported geometry type", type);
         }
-        else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
-            boundaries = it->value;
+        else if (!strcmp(type, TYPE_MultiLineString)) {
+            LOG_CNV("Unsupported geometry type", type);
         }
-        else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
-            semantics = it->value;
+        else if (!strcmp(type, TYPE_MultiSurface)) {
+            item = ConvertMultiSurface(boundaries, faceIndexPath, material, texture);
         }
-        else if (!strcmp(memberName, MEMBER_MATERIAL)) {
-            material = it->value;
+        else if (!strcmp(type, TYPE_CompositeSurface)) {
+            item = ConvertCompositeSurface(boundaries, faceIndexPath, material, texture);
         }
-        else if (!strcmp(memberName, MEMBER_TEXTURE)) {
-            texture = it->value;
+        else if (!strcmp(type, TYPE_Solid)) {
+            item = ConvertSolid(boundaries, faceIndexPath, material, texture);
         }
-        else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
-            jtemplate = it->value;
+        else if (!strcmp(type, TYPE_MultiSolid)) {
+            item = ConvertMultiSolid(boundaries, faceIndexPath, material, texture);
         }
-        else if (!strcmp(memberName, MEMBER_TRANSFORMATION)) {
-            jtransformation = it->value;
+        else if (!strcmp(type, TYPE_CompositeSolid)) {
+            item = ConvertCompositeSolid(boundaries, faceIndexPath, material, texture);
+        }
+        else if (!strcmp(type, TYPE_GeometryInstance)) {
+            item = ConvertGeometryInstance(boundaries, jtemplate, jtransformation);
         }
         else {
-            LOG_CNV("Unsupported geometry item member", memberName);
+            LOG_CNV("Unsupported geometry type", type);
         }
-    }
 
-
-    //
-    //
-    if (!type)
-        THROW_ERROR("Geometry item type is missed");
-    if (boundaries.IsNull())
-        THROW_ERROR("Geometry item boundaries are missed");
-
-    //
-    //
-    GEOM::GeometricItem item;
-    IntList faceIndexPath;
-
-    if (!strcmp(type, TYPE_MultiPoint)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+        assert(faceIndexPath.empty());
     }
-    else if (!strcmp(type, TYPE_MultiLineString)) {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
+    catch (cityJson2bin_error err) {
+        item = 0;
+        LOG_CNV("Failed to convert geometry item", err.c_str());
     }
-    else if (!strcmp(type, TYPE_MultiSurface)) {
-        item = ConvertMultiSurface(boundaries, faceIndexPath, material, texture);
-    }
-    else if (!strcmp(type, TYPE_CompositeSurface)) {
-        item = ConvertCompositeSurface(boundaries, faceIndexPath, material, texture);
-    }
-    else if (!strcmp(type, TYPE_Solid)) {
-        item = ConvertSolid(boundaries, faceIndexPath, material, texture);
-    }
-    else if (!strcmp(type, TYPE_MultiSolid)) {
-        item = ConvertMultiSolid(boundaries, faceIndexPath, material, texture);
-    }
-    else if (!strcmp(type, TYPE_CompositeSolid)) {
-        item = ConvertCompositeSolid(boundaries, faceIndexPath, material, texture);
-    }
-    else if (!strcmp(type, TYPE_GeometryInstance)) {
-        //TRACE_CNV("Unsupported geometry type: %s\n", type);
-        return 0;
-    }
-    else {
-        TRACE_CNV("Unsupported geometry type: %s\n", type);
-    }
-
-    assert(faceIndexPath.empty());
 
     return item;
 }
@@ -253,7 +264,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, IntList& fac
     Vertex2GeomVertex v2v;
     AddListOfLoops(jloops, vert, ind, v2v);
 
-    const char* clsnames[] = { "cityJsonFace", OWL_BoundaryRepresentation, NULL };
+    const char* clsnames[] = { OWL_CityJsonPrefix  "Surface", OWL_BoundaryRepresentation, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames);
 
     GEOM::BoundaryRepresentation face = CreateInstance(cls);
@@ -302,7 +313,7 @@ GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
     DoubleArray coord;
     for (auto& ipoint : jloop.GetArray()) {
         auto i = ipoint.GetInt();
-        AddCityVertx(i, coord);
+        AddVertx(i, coord);
     }
 
     auto curve = GEOM::PolyLine3D::Create(m_cityModel.RdfModel());
@@ -351,7 +362,7 @@ int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinate
     auto it = v2v.insert(Vertex2GeomVertex::value_type(jcityVertexInd, -1)).first;
 
     if (it->second < 0) {
-        it->second = AddCityVertx(jcityVertexInd, coordinates);
+        it->second = AddVertx(jcityVertexInd, coordinates);
     }
     
     return it->second;
@@ -359,15 +370,103 @@ int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinate
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::AddCityVertx(int jcityVertexInd, DoubleArray& coordinates)
+int64_t Geometry::AddVertx(int vertexInd, DoubleArray& coordinates)
 {
     assert(coordinates.size() % 3 == 0);
 
-    auto& jpoint = m_cityModel.GetVertex(jcityVertexInd);
+    auto& jpoint = GetVertex(vertexInd);
     for (int i = 0; i < 3; i++) {
         auto v = jpoint[i].GetDouble();
         coordinates.push_back(v);
     }
 
     return coordinates.size() / 3 - 1;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+rapidjson::Value& Geometry::GetVertex(int vertexInd)
+{
+    if (m_bUseTemplateVerticies)
+        return m_templateVerticies[vertexInd];
+    else
+        return m_jcityVerticies[vertexInd];
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void Geometry::SetGeometryTemplates(rapidjson::Value& jtemplates)
+{
+    for (auto& member : jtemplates.GetObject()) {
+        auto memberName = member.name.GetString();
+        if (!strcmp(memberName, MEMBER_TEMPLATES)) {
+            for (auto& jtemplate : member.value.GetArray()) {
+                m_templates.push_back(Template());
+                m_templates.back().json = jtemplate;
+            }
+        }
+        else if (!strcmp(memberName, MEMBER_TEMPL_VERT)) {
+            m_templateVerticies = member.value;
+        }
+    }
+}
+
+//-----------------------------------------------------------------------------------------------
+GEOM::GeometricItem Geometry::ConvertGeometryInstance(rapidjson::Value& boundaries, rapidjson::Value& jtemplate, rapidjson::Value& jtransformation)
+{
+    auto nTemplate = jtemplate.GetInt();
+    if (nTemplate < 0 || nTemplate >= m_templates.size()) {
+        THROW_ERROR("Geometry template index is out of range");
+    }
+
+    auto& tpl = m_templates[nTemplate];
+    if (!tpl.json.IsNull()) {
+        UseTemplateVerticies(true);
+        tpl.item = ConvertItem(tpl.json);
+        UseTemplateVerticies(false);
+        tpl.json.SetNull();
+    }
+
+    if (!tpl.item) {
+        return NULL;
+    }
+
+    double t[12];
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 4; j++) {
+            double v = jtransformation[4*i + j].GetDouble();
+            t[4*i + j] = v;
+        }
+    }
+
+    auto nInsertPt = boundaries[0].GetInt();
+    auto& jInsertPt = GetVertex(nInsertPt);
+    for (int i = 0; i < 3; i++){
+        double v = jInsertPt[i].GetDouble();
+        t[4*i + 3] += v;
+    }
+
+    GEOM::Matrix T = GEOM::Matrix::Create(m_cityModel.RdfModel());
+    //T.set_coordinates(t, 12);
+    T.set__11(t[0]);
+    T.set__21(t[1]);
+    T.set__31(t[2]);
+    T.set__41(t[3]);
+    T.set__12(t[4]);
+    T.set__22(t[5]);
+    T.set__32(t[6]);
+    T.set__42(t[7]);
+    T.set__13(t[8]);
+    T.set__23(t[9]);
+    T.set__33(t[10]);
+    T.set__43(t[11]);
+
+    const char* clsnames[] = { OWL_CityJsonPrefix  TYPE_GeometryInstance, OWL_Transformation, NULL};
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    
+    GEOM::Transformation trans = CreateInstance(cls);
+    trans.set_object(tpl.item);
+    trans.set_matrix(T);
+
+    return trans;
 }

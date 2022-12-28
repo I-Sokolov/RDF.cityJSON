@@ -28,6 +28,8 @@
 #define MEMBER_GEOMETRY         "geometry"
 #define MEMBER_BOUNDARIES       "boundaries"
 #define MEMBER_TEMPLATE         "template"
+#define MEMBER_TEMPLATES        "templates"
+#define MEMBER_TEMPL_VERT       "vertices-templates"
 #define MEMBER_TRANSFORMATION   "transformationMatrix"
 #define MEMBER_LOD              "lod"
 #define MEMBER_SEMANTICS        "semantics"
@@ -49,6 +51,7 @@
 #define OWL_CityJsonPrefix              "cityJSON."
 #define OWL_BoundaryRepresentation      "BoundaryRepresentation"
 #define OWL_Collection                  "Collection"
+#define OWL_Transformation              "Transformation"
 
 //====================================================================
 

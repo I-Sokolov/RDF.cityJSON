@@ -139,7 +139,7 @@ GEOM::Color Appearance::GetDefaultColor()
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, IntList& faceIndexPath, rapidjson::Value& jrings)
+GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, IntList& faceIndexPath, rapidjson::Value& /*jrings*/)
 {
     auto pmat = GetValue(jmaterial, m_defaultThemeMaterial, faceIndexPath);
     GEOM::Color color;
@@ -296,7 +296,7 @@ GEOM::Texture Appearance::GetRdfTexture(rapidjson::Value& jtex, rapidjson::Value
                 uv[i][k] = jptUV[k].GetDouble();
 
             auto iptXYZ = viOuter[i].GetInt();
-            auto& jptXYZ = m_cityModel.GetVertex(iptXYZ);
+            auto& jptXYZ = m_cityModel.GetGeometry().GetVertex(iptXYZ);
             for (int k = 0; k < 3; k++)
                 xyz[i][k] = jptXYZ[k].GetDouble();
         }

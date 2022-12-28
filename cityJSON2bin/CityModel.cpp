@@ -87,7 +87,7 @@ void CityModel::ConvertCityJSONObject()
             version = member.value.GetString();
         }
         else if (!strcmp(memberName, MEMBER_VERTICIES)) {
-            m_jcityVerticies = member.value;
+            m_geometry.SetCityVerticies (member.value);
         }
         else if (!strcmp(memberName, MEMBER_APPEARANCE)) {
             m_appearance.SetCityAppearance(member.value);
@@ -96,10 +96,7 @@ void CityModel::ConvertCityJSONObject()
             transform = member.value;
         }
         else if (!strcmp(memberName, MEMBER_GEOM_TEMPLATES)) {
-            printf("%s\n", MEMBER_GEOM_TEMPLATES);
-            for (auto& m : member.value.GetObject()) {
-                printf("   %s\n", m.name.GetString());
-            }
+            m_geometry.SetGeometryTemplates(member.value);
         }
         else if (!strcmp(memberName, MEMBER_CITYOBJECTS)) {
             cityObjects = member.value;
@@ -164,21 +161,24 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
     //if (!_stricmp(type, "TINRelief"))
     //    return 0;
 
+    std::vector<GEOM::GeometricItem> items;
+    if (jgeometry.IsArray()) {
+        m_geometry.Convert(jgeometry, items);
+    }
+    else {
+        LOG_CNV("City object has no geometry", type);
+    }
+    if (items.empty()) {
+        return 0;
+    }
+
     std::string owlType(OWL_CityJsonPrefix);
     owlType.append(type);
 
     const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
     auto cls = GetOrCreateClass(clsname);
     GEOM::Collection instance = CreateInstance(cls, id);
-
-    if (jgeometry.IsArray()) {
-        std::vector<GEOM::GeometricItem> items;
-        m_geometry.Convert(jgeometry, items);
-        instance.set_objects(items.data(), items.size());
-    }
-    else {
-        LOG_CNV("City object has no geometry", type);
-    }
+    instance.set_objects(items.data(), items.size());
 
     return instance;
 }
