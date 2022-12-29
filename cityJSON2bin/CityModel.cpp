@@ -238,3 +238,32 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, R
 
     return prop;
 }
+
+//-----------------------------------------------------------------------------------------------
+//
+void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjson::Value& value)
+{
+    auto cls = GetInstanceClass(instance);
+    auto ktype = value.GetType();
+
+    switch (ktype) {
+        case rapidjson::kStringType:
+        {
+            auto val = value.GetString();
+            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_CHAR);
+            SetDatatypeProperty(instance, prop, val);
+            break;
+        }
+
+        case rapidjson::kNumberType:
+        {
+            auto val = value.GetDouble();
+            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE);
+            SetDatatypeProperty(instance, prop, val);
+            break;
+        }
+
+        default:
+            LOG_CNV("Unsupported attribte type", name);
+    }
+}

@@ -32,7 +32,7 @@ void Semantics::Surface::Init(rapidjson::Value& jsurf)
         }
         else {
             attributes.push_back(Attribute());
-            attributes.back().name = member.name;
+            attributes.back().name = member.name.GetString();
             attributes.back().value = member.value;
         }
     }
@@ -128,26 +128,7 @@ int64_t Semantics::GetOwlInstance(Surface& surf)
         }
 
         for (auto& attr : surf.attributes) {
-            auto name = attr.name.GetString();
-            auto ktype = attr.value.GetType();
-            switch (ktype) {
-                case rapidjson::kStringType:
-                {
-                    auto val = attr.value.GetString();
-                    prop = m_cityModel.GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_CHAR);
-                    SetDatatypeProperty(surf.owlInstance, prop, val);
-                    break;
-                }
-                case rapidjson::kNumberType:
-                {
-                    auto val = attr.value.GetDouble();
-                    prop = m_cityModel.GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE);
-                    SetDatatypeProperty(surf.owlInstance, prop, val);
-                    break;
-                }
-                default:
-                    LOG_CNV("Unsupported attribte type", "for semantic sutface");
-            }
+            m_cityModel.CreateAttribute(surf.owlInstance, attr.name, attr.value);
         }
 
         surf.attributes.clear();

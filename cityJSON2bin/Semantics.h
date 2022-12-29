@@ -14,7 +14,7 @@ public:
 private:
     struct Attribute
     {
-        rapidjson::Value name;
+        const char*      name;
         rapidjson::Value value;
     };
     
