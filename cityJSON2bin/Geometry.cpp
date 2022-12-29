@@ -215,142 +215,100 @@ GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, 
 //
 GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    const char* clsnames[] = { className , OWL_Collection /*OWL_BoundaryRepresentation*/, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
-
-    //GEOM::BoundaryRepresentation multiSurface = CreateInstance(cls);
-    GEOM::Collection multiSurface = CreateInstance(cls);
-    if (!multiSurface) {
-        THROW_ERROR("Failed to create " TYPE_MultiSurface " instance");
-    }
-
-#if 1
-    //faces
-    std::vector<GEOM::GeometricItem> faces;
+    FaceGroups fgroups;
+    
     fd.indexPath.push_back(0);
     for (auto& jface : boundaries.GetArray()) {
-        auto face = ConvertFace(jface, fd);
-        if (face) {
-            faces.push_back(face);
-        }
+        AddFaceToGroups(fgroups, jface, fd);
         fd.indexPath.back()++;
     }
     fd.indexPath.pop_back();
 
-    multiSurface.set_objects(faces.data(), faces.size());
-    //multiSurface.set_faces(faces.data(), faces.size());
-#else
-    //mesh
-    Coordinates vert;
-    GeomIndicies  ind;
-    Vertex2GeomVertex v2v;
-    AddListOfSurfaces(boundaries, vert, ind, v2v);
+    std::vector<GEOM::GeometricItem> items;
+    for (auto& group : fgroups) {
+        auto item = CreateFaceGroup(group);
+        if (item) {
+            items.push_back(item);
+        }
+    }
 
-    multiSurface.set_vertices(vert.data(), vert.size());
-    multiSurface.set_indices(ind.data(), ind.size());
-#endif
+    const char* clsnames[] = { className , OWL_Collection, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+
+    GEOM::Collection multiSurface = CreateInstance(cls);
+    multiSurface.set_objects(items.data(), items.size());
 
     return multiSurface;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, PerFaceData& fd)
+void Geometry::AddFaceToGroups(FaceGroups& fgroups, rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    //mesh
-    DoubleArray vert;
-    GeomIndicies  ind;
-    Vertex2GeomVertex v2v;
-    AddListOfLoops(jloops, vert, ind, v2v);
+    Appearance::SurfaceAppearance app;
+    m_cityModel.GetAppearance().GetSurfaceAppearance(app, fd.material, fd.texture, fd.indexPath);
 
-    const char* clsnames[] = { OWL_CityJsonPrefix  "Surface", OWL_BoundaryRepresentation, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    FaceGroupKey key;
+    std::swap(key.materials, app.materials);
+    std::swap(key.textures, app.textures);
+    key.semantic = fd.semantics.GetSurfaceSemantic(fd.indexPath);
 
-    GEOM::BoundaryRepresentation face = CreateInstance(cls);
-    face.set_vertices(vert.data(), vert.size());
-    face.set_indices(ind.data(), ind.size());
+    FaceGroup& group = GetOrCreateGroup(fgroups, key);
 
-#if 0
-    std::vector<GEOM::Curve> curves;
-    for (auto& jloop : jloops.GetArray()) {
-        auto curve = ConvertCurve(jloop);
-        if (curve) {
-            curves.push_back(curve);
+    AddFaceToGroup(group, boundaries, app.textureVerticies);
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+Geometry::FaceGroup& Geometry::GetOrCreateGroup(FaceGroups& fgroups, FaceGroupKey& key)
+{
+    for (auto& group : fgroups) {
+        if (KeysEqual (key, group.key)) {
+            return group;
         }
     }
 
-    if (curves.size() < 1) {
-        TRACE_CNV("Empty face\n");
-        return NULL;
-    }
+    fgroups.push_back(FaceGroup());
+    auto& group = fgroups.back();
 
-    auto rcurves = curves.data();
-    auto ncurves = curves.size();
+    group.key.semantic = key.semantic;
+    std::swap(group.key.materials, key.materials);
+    std::swap(group.key.textures, key.textures);
 
-    auto face = GEOM::Face2D::Create(m_cityModel.RdfModel());
-    face.set_outerPolygon(rcurves[0]);
-
-    if (ncurves > 1) {
-        face.set_innerPolygons(rcurves + 1, ncurves - 1);
-    }
-
-    return face;
-#endif
-
-    auto rdfMat = m_cityModel.GetAppearance().GetFaceMaterial(fd.material, fd.texture, fd.indexPath, jloops);
-    if (rdfMat) {
-        face.set_material(rdfMat);
-    }
-
-    auto semantic = fd.semantics.GetSurfaceSemantic(fd.indexPath);
-    if (semantic) {
-        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE, OWL_SurfaceSemantic);
-        SetObjectTypeProperty(face, prop, &semantic, 1);
-    }
-
-    return face;
+    return group;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
+bool Geometry::KeysEqual(FaceGroupKey const& key1, FaceGroupKey& key2)
 {
-    DoubleArray coord;
-    for (auto& ipoint : jloop.GetArray()) {
-        auto i = ipoint.GetInt();
-        AddVertx(i, coord);
+    if (key1.semantic != key2.semantic) {
+        return false;
     }
-
-    auto curve = GEOM::PolyLine3D::Create(m_cityModel.RdfModel());
-    curve.set_coordinates(coord);
-
-    return curve;
+    if (key1.materials != key2.materials) {
+        return false;
+    }
+    if (key1.textures != key2.textures) {
+        return false;
+    }
+    return true;
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddListOfSurfaces(rapidjson::Value& jsurfaces, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v)
-{
-    for (auto& loops : jsurfaces.GetArray()) {
-        AddListOfLoops(loops, coordinates, ind, v2v);
-    }
-}
-
-//-----------------------------------------------------------------------------------------------
-//
-void Geometry::AddListOfLoops(rapidjson::Value& jloops, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Appearance::Theme2TextureIndecies& texIndecies)
 {
     int end = -1;
-    for (auto& jloop : jloops.GetArray()) {
-        AddPoints(jloop, coordinates, ind, v2v);
-        ind.push_back(end);
+    for (auto& jloop : boundaries.GetArray()) {
+        AddPoints(jloop, faces.coordinates, faces.indecies, faces.cityVert2Coord);
+        faces.indecies.push_back(end);
         end = -2;
     }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v)
+void Geometry::AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v)
 {
     for (auto& jpoint : jpoints.GetArray()) {
         auto i = GetAddVertex(jpoint, coordinates, v2v);
@@ -360,16 +318,16 @@ void Geometry::AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, Ge
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Vertex2GeomVertex& v2v)
+int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Int2Int64& v2v)
 {
     auto jcityVertexInd = jpoint.GetInt();
-    
-    auto it = v2v.insert(Vertex2GeomVertex::value_type(jcityVertexInd, -1)).first;
+
+    auto it = v2v.insert(Int2Int64::value_type(jcityVertexInd, -1)).first;
 
     if (it->second < 0) {
         it->second = AddVertx(jcityVertexInd, coordinates);
     }
-    
+
     return it->second;
 }
 
@@ -387,6 +345,48 @@ int64_t Geometry::AddVertx(int vertexInd, DoubleArray& coordinates)
 
     return coordinates.size() / 3 - 1;
 }
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
+{
+    const char* clsnames[] = { OWL_CityJsonPrefix  "Surface", OWL_BoundaryRepresentation, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+
+    GEOM::BoundaryRepresentation face = CreateInstance(cls);
+    face.set_vertices(group.coordinates.data(), group.coordinates.size());
+    face.set_indices(group.indecies.data(), group.indecies.size());
+
+    auto rdfMat = m_cityModel.GetAppearance().GetRdfMaterial (group.key.materials, group.key.textures);
+    if (rdfMat) {
+        face.set_material(rdfMat);
+    }
+
+    auto semantic = group.key.semantic;
+    if (semantic) {
+        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE, OWL_SurfaceSemantic);
+        SetObjectTypeProperty(face, prop, &semantic, 1);
+    }
+
+    return face;
+}
+#if 0
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
+{
+    DoubleArray coord;
+    for (auto& ipoint : jloop.GetArray()) {
+        auto i = ipoint.GetInt();
+        AddVertx(i, coord);
+    }
+
+    auto curve = GEOM::PolyLine3D::Create(m_cityModel.RdfModel());
+    curve.set_coordinates(coord);
+
+    return curve;
+}
+#endif
 
 //-----------------------------------------------------------------------------------------------
 //

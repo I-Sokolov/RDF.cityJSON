@@ -81,7 +81,7 @@ void Semantics::Init(rapidjson::Value& semantics)
 //-----------------------------------------------------------------------------------------------
 //
 
-int64_t Semantics::GetSurfaceSemantic(UIntList faceIndexPath)
+OwlInstance Semantics::GetSurfaceSemantic(UIntList faceIndexPath)
 {
     auto values = &m_values;
     for (auto i : faceIndexPath) {
@@ -106,7 +106,7 @@ int64_t Semantics::GetSurfaceSemantic(UIntList faceIndexPath)
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Semantics::GetOwlInstance(Surface& surf)
+OwlInstance Semantics::GetOwlInstance(Surface& surf)
 {
     if (!surf.type.IsNull()) {
 

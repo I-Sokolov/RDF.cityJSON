@@ -114,55 +114,182 @@ void Appearance::SetCityVerticiesTextures(rapidjson::Value& jverticies)
     assert(jverticies.IsNull());
 }
 
+
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Color Appearance::GetDefaultColor()
+void Appearance::GetSurfaceAppearance(SurfaceAppearance& appearance, rapidjson::Value& jmaterial, rapidjson::Value& jtexture, UIntList& faceIndexPath)
 {
-    static GEOM::Color defaultColor;
-
-    if (!defaultColor) {
-        defaultColor = GEOM::Color::Create(m_cityModel.RdfModel(), "defaultColor");
-
-        double clr[3] = { .5, .5, .5 };
-        defaultColor.set_ambient(CreateColorComponent(clr));
-        //??? rdfColor.set_ambientReflectance(m.ambientIntensity);
-
-        defaultColor.set_diffuse(CreateColorComponent(clr)); //??? m.shininess
-        defaultColor.set_emissive(CreateColorComponent(clr));
-        defaultColor.set_specular(CreateColorComponent(clr));
-
-        defaultColor.set_transparency(0.5);
+    if (jmaterial.IsObject()) {
+        for (auto& jmat : jmaterial.GetObject()) {
+            const char* theme = jmat.name.GetString();
+            auto pmat = FindValueByIndexPath(jmat.value, faceIndexPath);
+            if (pmat && pmat->IsInt()) {
+                auto ind = pmat->GetInt();
+                appearance.materials.insert(Theme2Index::value_type(theme, ind));
+            }
+        }
     }
 
-    return defaultColor;
+    if (jtexture.IsObject()) {
+        for (auto& jtex : jtexture.GetObject()) {
+            const char* theme = jtex.name.GetString();
+
+            auto ptex = FindValueByIndexPath(jtex.value, faceIndexPath);
+            if (ptex && ptex->IsArray()) {
+
+                bool hasNull = false;
+                int texInd = -1;
+                ListOfListOfInt uv2;
+
+                for (auto& ri : ptex->GetArray()) {
+                    if (hasNull) {
+                        break;
+                    }
+
+                    uv2.push_back(ListOfInt());
+                    auto& uv = uv2.back();
+
+                    if (ri.IsArray()) {
+                        for (rapidjson::SizeType i = 0; i < ri.Size(); i++) {
+                            if (ri[i].IsNull()) {
+                                hasNull = true;
+                                break;
+                            }
+                            else if (i == 0) {
+                                if (texInd < 0) {
+                                    texInd = ri[i].GetInt();
+                                }
+                                else if (texInd != ri[i].GetInt()) {
+                                    LOG_CNV("texture for opening is differ from texture for outer", "");
+                                }
+                            }
+                            else {
+                                uv.push_back(ri[i].GetInt());
+                            }
+                        }
+                    }
+                }
+
+                if (!hasNull) {
+                    auto ib1 = appearance.textures.insert(Theme2Index::value_type(theme, texInd));
+                    auto ib2 = appearance.textureVerticies.insert(Theme2TextureIndecies::value_type(theme, ListOfListOfInt()));
+                    std::swap(ib2.first->second, uv2);
+                }
+            }
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjson::Value& jtexture, UIntList& faceIndexPath, rapidjson::Value& /*jrings*/)
+int Appearance::GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, size_t maxInd)
 {
-    auto pmat = GetValue(jmaterial, m_defaultThemeMaterial, faceIndexPath);
-    GEOM::Color color;
-    if (pmat) {
-        color = GetRdfColor(*pmat);
+    int ind = -1;
+    if (defaultTheme) {
+        auto it = th2ind.find(defaultTheme);
+        if (it != th2ind.end()) {
+            ind = it->second;
+        }
+    }
+    else if (maxInd > 0) {
+        ind = 0;
     }
 
-    if (!color) {
-        color = GetDefaultColor();
+    if (ind > 0 && ind >= maxInd) {
+        LOG_CNV("Material or texture index is out of range", "");
+        ind = -1;
     }
 
-    auto ptex = GetValue(jtexture, m_defaultThemeTexture, faceIndexPath);
-    GEOM::Texture tex;
-    //if (ptex)
-    //    tex = GetRdfTexture(*ptex, jrings);
+    return ind;
+}
 
-    if (color || tex) {
-        auto mat = GEOM::Material::Create(m_cityModel.RdfModel());
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Material Appearance::GetRdfMaterial(Theme2Index& materials, Theme2Index& textures)
+{
+    int iMat = GetThemeIndex(materials, m_defaultThemeMaterial, m_materials.size());
+    int iTex = GetThemeIndex(textures, m_defaultThemeTexture, m_textures.size());
+
+    auto& tex2rdf = m_matTex2Rdf[iMat];
+    auto& rdfMat = tex2rdf[iTex];
+
+    if (!rdfMat) {
+        GEOM::Color color = GetRdfColor(iMat);
+        GEOM::Texture tex = GetRdfTexture(iTex);
+
+        rdfMat = GEOM::Material::Create(m_cityModel.RdfModel());
         if (color)
-            mat.set_color(color);
+            rdfMat.set_color(color);
         if (tex)
-            mat.set_textures(&tex, 1);
-        return mat;
+            rdfMat.set_textures(&tex, 1);
+    }
+
+    return rdfMat;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+rapidjson::Value* Appearance::FindValueByIndexPath(rapidjson::Value& jnode, UIntList& faceIndexPath)
+{
+    auto itvalue = jnode.FindMember(MEMBER_VALUE);
+    if (itvalue != jnode.MemberEnd()) {
+        return &(itvalue->value);
+    }
+
+    auto itvalues = jnode.FindMember(MEMBER_VALUES);
+    if (itvalues != jnode.MemberEnd()) {
+        auto values = &(itvalues->value);
+        for (auto i : faceIndexPath) {
+            if (values) {
+                values = &((*values)[i]);
+            }
+        }
+        return values;
+    }
+
+    LOG_CNV("Missed appearance value", "neither values nor value");
+    return nullptr;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::ColorComponent Appearance::CreateColorComponent(double rgb[3], double scale)
+{
+    if (scale < 0 || scale > 1)
+        scale = 1;
+
+    auto clr = GEOM::ColorComponent::Create(m_cityModel.RdfModel());
+    clr.set_R(rgb[0]*scale);
+    clr.set_G(rgb[1]*scale);
+    clr.set_B(rgb[2]*scale);
+
+    return clr;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+GEOM::Color Appearance::GetRdfColor(int iMat)
+{
+    if (iMat >= 0 && iMat < m_materials.size()) {
+        auto& m = m_materials[iMat];
+
+        if (!m.rdfColor) {
+
+            auto rdfColor = GEOM::Color::Create(m_cityModel.RdfModel(), m.name);
+
+            rdfColor.set_ambient(CreateColorComponent(m.diffuseColor, m.ambientIntensity));
+
+            rdfColor.set_diffuse(CreateColorComponent(m.diffuseColor)); 
+            rdfColor.set_emissive(CreateColorComponent(m.emissiveColor));
+            rdfColor.set_specular(CreateColorComponent(m.specularColor));
+            
+            //??? m.shininess
+            rdfColor.set_transparency(1 - m.transparency);
+
+            m.rdfColor = rdfColor;
+        }
+
+        return m.rdfColor;
     }
     else {
         return NULL;
@@ -171,146 +298,20 @@ GEOM::Material Appearance::GetFaceMaterial(rapidjson::Value& jmaterial, rapidjso
 
 //-----------------------------------------------------------------------------------------------
 //
-rapidjson::Value* Appearance::GetValue(rapidjson::Value& jnode, const char* defaultTheme, UIntList& faceIndexPath)
+GEOM::Texture Appearance::GetRdfTexture(int iTex)
 {
-    rapidjson::Value* theme = nullptr;
+    if (iTex >= 0 && iTex < m_textures.size()) {
+        auto& t = m_textures[iTex];
 
-    if (!jnode.IsNull()) {
-        if (defaultTheme) {
-            auto it = jnode.FindMember(defaultTheme);
-            if (it != jnode.MemberEnd()) {
-                theme = &(it->value);
-            }
-        }
+        if (!t.rdfTexture) {
+            t.rdfTexture = GEOM::Texture::Create(m_cityModel.RdfModel());
+            t.rdfTexture.set_type(strcmp(t.type, "JPG") ? 2 : 1);
+            t.rdfTexture.set_name(t.image);
 
-        if (!theme) {
-            auto it = jnode.MemberBegin();
-            if (it != jnode.MemberEnd()) {
-                theme = &(it->value);
-            }
         }
+        return t.rdfTexture;
     }
-
-    if (theme) {
-        auto itvalues = theme->FindMember(MEMBER_VALUES);
-        if (itvalues != theme->MemberEnd()) {
-            auto values = &(itvalues->value);
-            for (auto i : faceIndexPath) {
-                values = &((*values)[i]);
-            }
-            return values;
-        }
-        else {
-            auto itvalue = theme->FindMember(MEMBER_VALUE);
-            if (itvalue != theme->MemberEnd()) {
-                return &(itvalue->value);
-            }
-            else {
-                LOG_CNV("Missed appearance value", "neither values nor value");
-            }
-        }
-    }
-
-    return nullptr;
-}
-
-//-----------------------------------------------------------------------------------------------
-//
-GEOM::ColorComponent Appearance::CreateColorComponent(double rgb[3], double w)
-{
-    auto clr = GEOM::ColorComponent::Create(m_cityModel.RdfModel());
-    clr.set_R(rgb[0]);
-    clr.set_G(rgb[1]);
-    clr.set_B(rgb[2]);
-    if (w >= 0) {
-        clr.set_W(w);
-    }
-    return clr;
-}
-
-//-----------------------------------------------------------------------------------------------
-//
-GEOM::Color Appearance::GetRdfColor(rapidjson::Value& jmat)
-{
-    if (jmat.IsNull()) {
+    else {
         return NULL;
     }
-
-    try {
-        auto indMat = jmat.GetInt();
-        if (indMat >= m_materials.size()) {
-            LOG_CNV("Material index out of range", "for surface material");
-            return NULL;
-        }
-
-        auto& m = m_materials[indMat];
-
-        if (!m.rdfColor) {
-            
-            auto rdfColor = GEOM::Color::Create(m_cityModel.RdfModel(), m.name);
-            
-            rdfColor.set_ambient(CreateColorComponent(m.diffuseColor));
-            //??? rdfColor.set_ambientReflectance(m.ambientIntensity);
-            
-            rdfColor.set_diffuse(CreateColorComponent(m.diffuseColor)); //??? m.shininess
-            rdfColor.set_emissive(CreateColorComponent(m.diffuseColor /*m.emissiveColor*/));
-            rdfColor.set_specular(CreateColorComponent(m.diffuseColor  /*m.specularColor*/));
-
-            rdfColor.set_transparency(1-m.transparency);
-
-            m.rdfColor = rdfColor;
-        }
-
-        return m.rdfColor;
-    }
-    catch (cityJson2bin_error expt) {
-        LOG_CNV("Failed to convert texture", expt.c_str());
-    }
-
-    return NULL;
-}
-
-//-----------------------------------------------------------------------------------------------
-//
-GEOM::Texture Appearance::GetRdfTexture(rapidjson::Value& jtex, rapidjson::Value& jrings)
-{
-    GEOM::Texture rdfTexture;
-
-    try {
-        auto& viOuter = jrings[0];  //outer loop vertex indecies
-        auto& texOuter = jtex[0];  //texture for outer loop vertecies
-
-        static Texture defaultTextute{ "JPG", "DefaultTexture.jpg" };
-        Texture* pTexture = &defaultTextute;
-        int texInd = texOuter[0].GetInt();
-        if (texInd < m_textures.size()) {
-            pTexture = &(m_textures[texInd]);
-        }
-
-        double uv[2][2] = { {0,0},{1,1} };
-        double xyz[2][3] = { {0,0,0},{1,1,1} };
-        for (int i = 0; i < 2; i++) {
-            auto iptUV = texOuter[i + 1].GetInt();
-            auto& jptUV = m_textureVerticies[iptUV];
-            for (int k = 0; k < 2; k++)
-                uv[i][k] = jptUV[k].GetDouble();
-
-            auto iptXYZ = viOuter[i].GetInt();
-            auto& jptXYZ = m_cityModel.GetGeometry().GetVertex(iptXYZ);
-            for (int k = 0; k < 3; k++)
-                xyz[i][k] = jptXYZ[k].GetDouble();
-        }
-
-        rdfTexture = GEOM::Texture::Create(m_cityModel.RdfModel());
-        rdfTexture.set_type(strcmp(pTexture->type, "JPG") ? 2 : 1);
-        rdfTexture.set_name(pTexture->image);
-        return 0;
-        //TRACE_CNV("TODO textures....\n");
-
-    }
-    catch (cityJson2bin_error expt) {
-        LOG_CNV ("Failed to convert texture", expt.c_str());
-        rdfTexture = 0;
-    }
-    return rdfTexture;
 }

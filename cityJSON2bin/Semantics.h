@@ -9,7 +9,7 @@ public:
 
     void Init(rapidjson::Value& semantics);
 
-    int64_t GetSurfaceSemantic(UIntList faceIndexPath);
+    OwlInstance GetSurfaceSemantic(UIntList faceIndexPath);
 
 private:
     struct Attribute
@@ -32,13 +32,13 @@ private:
         
         Attributes       attributes;
 
-        int64_t          owlInstance;
+        OwlInstance      owlInstance;
     };
 
     typedef std::vector<Surface> Surfaces;
 
 private:
-    int64_t GetOwlInstance(Surface& surf);
+    OwlInstance GetOwlInstance(Surface& surf);
 
 private:
     CityModel&           m_cityModel;

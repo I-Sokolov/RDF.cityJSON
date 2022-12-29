@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Semantics.h"
+#include "Appearance.h"
 class CityModel;
 
 class Geometry
@@ -17,9 +18,6 @@ public:
 
 
 private:
-    typedef std::vector<int64_t>   GeomIndicies;
-    typedef std::map<int, int64_t> Vertex2GeomVertex;
-    
     struct Template
     {
         rapidjson::Value json;
@@ -38,6 +36,24 @@ private:
         UIntList         indexPath;
     };
 
+    struct FaceGroupKey
+    {
+        OwlInstance             semantic;
+        Appearance::Theme2Index materials;
+        Appearance::Theme2Index textures;
+    };
+
+    struct FaceGroup
+    {
+        FaceGroupKey        key;
+        //        
+        DoubleArray         coordinates;
+        Int64Array          indecies;
+        Int2Int64           cityVert2Coord;
+    };
+
+    typedef std::list<FaceGroup> FaceGroups;
+
 private:
     GEOM::GeometricItem ConvertItem(rapidjson::Value& jitem);
     GEOM::GeometricItem ConvertCompositeSolid(rapidjson::Value& boundaries, PerFaceData& fd);    
@@ -48,16 +64,21 @@ private:
     GEOM::GeometricItem ConvertMultiSurface(rapidjson::Value& boundaries, PerFaceData& fd);
     GEOM::GeometricItem ConvertSurfaceSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd);
 
-    void AddListOfSurfaces(rapidjson::Value& jsurfaces, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v);
-    void AddListOfLoops(rapidjson::Value& jloops, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v);
-    void AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, GeomIndicies& ind, Vertex2GeomVertex& v2v);
-    int64_t GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Vertex2GeomVertex& v2v);
+    void AddFaceToGroups(FaceGroups& fgroups, rapidjson::Value& boundaries, PerFaceData& fd);
+    FaceGroup& GetOrCreateGroup(FaceGroups& fgroups, FaceGroupKey& key);
+    bool KeysEqual(FaceGroupKey const& key1, FaceGroupKey& key2);
+
+    void AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Appearance::Theme2TextureIndecies& texIndecies);
+    void AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v);
+    int64_t GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Int2Int64& v2v);
     int64_t AddVertx(int vertexInd, DoubleArray& coordinates);
+
+    GEOM::GeometricItem CreateFaceGroup(FaceGroup& group);
 
     void UseTemplateVerticies(bool use) { m_bUseTemplateVerticies = use; }
 
     GEOM::GeometricItem ConvertFace(rapidjson::Value& jloops, PerFaceData& fd);
-    GEOM::Curve ConvertCurve(rapidjson::Value& jloop);
+    //GEOM::Curve ConvertCurve(rapidjson::Value& jloop);
 
     GEOM::GeometricItem ConvertGeometryInstance(rapidjson::Value& boundaries, rapidjson::Value& jtemplate, rapidjson::Value& jtransformation);
 
