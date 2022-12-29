@@ -41,6 +41,7 @@
 #define MEMBER_PARENT           "parent"
 #define MEMBER_CHILDREN         "children"
 #define MEMBER_ATTRIBUTES       "attributes"
+#define MEMBER_METADATA         "metadata"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"

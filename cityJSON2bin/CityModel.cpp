@@ -77,6 +77,7 @@ void CityModel::ConvertCityJSONObject()
     const char*         version     = nullptr;
     rapidjson::Value    transform;
     rapidjson::Value    cityObjects;
+    rapidjson::Value    metadata;
 
     for (auto& member : m_cityDOM.GetObject()) {
         auto memberName = member.name.GetString();
@@ -101,6 +102,9 @@ void CityModel::ConvertCityJSONObject()
         else if (!strcmp(memberName, MEMBER_CITYOBJECTS)) {
             cityObjects = member.value;
         }
+        else if (!strcmp(memberName, MEMBER_METADATA)) {
+            metadata = member.value;
+        }
         else {
             LOG_CNV("Unsupported cityJSON member", memberName);
         }
@@ -111,6 +115,8 @@ void CityModel::ConvertCityJSONObject()
     if (!version || fabs(atof(version) - VERSION_1_1) > DBL_MIN)
         THROW_ERROR("Unsupported version");
 
+    //
+    //
     std::vector<OwlInstance> owlObjects;
     int iObject = 0;
     for (auto& o : cityObjects.GetObject()) {
@@ -132,13 +138,18 @@ void CityModel::ConvertCityJSONObject()
         }
     }
 
+    //
+    //
     const char* clsname[] = { type , OWL_Collection, NULL};
     auto cls = GetOrCreateClass(clsname);
     GEOM::Collection city = CreateInstance(cls, type);
 
-    //TODO SetCityJSONTransform(jtransform);
-
     city.set_objects(owlObjects.data(), owlObjects.size());
+
+    //
+    //
+    CreateAttribute(city, MEMBER_TRANSFORM, transform);
+    CreateAttribute(city, MEMBER_METADATA, metadata);
 }
 
 
@@ -255,6 +266,24 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, R
 
     return prop;
 }
+//-----------------------------------------------------------------------------------------------
+//
+OwlInstance CityModel::ConvertJsonObject(const char* name, rapidjson::Value& value)
+{
+    std::string clsName(OWL_CityJsonPrefix);
+    clsName.append(name);
+    const char* clsnames[] = { clsName.c_str(), NULL };
+    auto cls = GetOrCreateClass(clsnames);
+
+    auto inst = CreateInstance(cls);
+
+    for (auto& attr : value.GetObject()) {
+        CreateAttribute(inst, attr.name.GetString(), attr.value);
+    }
+
+    return inst;
+}
+
 
 //-----------------------------------------------------------------------------------------------
 //
@@ -264,6 +293,9 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
     auto ktype = value.GetType();
 
     switch (ktype) {
+        case rapidjson::kNullType:
+            break;
+
         case rapidjson::kStringType:
         {
             auto val = value.GetString();
@@ -288,6 +320,37 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
             SetDatatypeProperty(instance, prop, val);
             break;
         }
+
+        case rapidjson::kObjectType:
+        {
+            auto val = ConvertJsonObject(name, value);
+            auto prop = GetOrCreateProperty(cls, name, OBJECTPROPERTY_TYPE);
+            SetObjectProperty(instance, prop, val);
+            break;
+        }
+
+        case rapidjson::kArrayType:
+        {
+            if (value.Size() > 1) {
+                auto kElemType = value[0].GetType();
+                switch (kElemType) {
+                    case rapidjson::kNumberType:
+                    {
+                        std::vector<double> val;
+                        for (auto& v : value.GetArray()) {
+                            val.push_back(v.GetDouble());
+                        }
+                        auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE, 0, -1);
+                        SetDatatypeProperty(instance, prop, val.data(), val.size());
+                        break;
+                    }
+
+                    default:
+                        LOG_CNV("Unsupported attribte array type", name);
+                }
+            }
+            break;
+        }//case rapidjson::kArrayType
 
         default:
             LOG_CNV("Unsupported attribte type", name);

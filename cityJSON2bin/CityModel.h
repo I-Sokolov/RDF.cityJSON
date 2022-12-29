@@ -29,7 +29,7 @@ private:
     void ConvertCityJSONObject();
 
     OwlInstance ConvertCityObject(const char* id, rapidjson::Value& jobject);
-
+    OwlInstance ConvertJsonObject(const char* name, rapidjson::Value& value);
 private:
     OwlModel                m_owlModel;
     rapidjson::Document     m_cityDOM;
