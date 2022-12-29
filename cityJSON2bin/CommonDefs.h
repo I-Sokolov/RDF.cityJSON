@@ -57,6 +57,7 @@
 #define OWL_BoundaryRepresentation      "BoundaryRepresentation"
 #define OWL_Collection                  "Collection"
 #define OWL_Transformation              "Transformation"
+#define OWL_SurfaceSemantic             OWL_CityJsonPrefix "SurfaceSemantic"
 
 //====================================================================
 

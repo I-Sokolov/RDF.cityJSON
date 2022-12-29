@@ -236,7 +236,7 @@ OwlClass CityModel::GetOrCreateClass(const char* names[])
 
 //-----------------------------------------------------------------------------------------------
 //
-RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, RdfPropertyType propType, int64_t minCard, int64_t maxCard, int attempt)
+RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, RdfPropertyType propType, const char* refCls, int64_t minCard, int64_t maxCard, int attempt)
 {
     //std::string fullPropName = GetNameOfClass(cls);
     //fullPropName.append(".");
@@ -256,12 +256,16 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, R
         GetClassPropertyCardinalityRestriction(cls, prop, &minC, &maxC);
         if (ptype != propType || minC != minCard || maxC != maxCard) {
             LOG_CNV("Porperty exists but traits mismatches", fullPropName.c_str());
-            prop = GetOrCreateProperty(cls, propName, propType, minCard, maxCard, attempt + 1);
+            prop = GetOrCreateProperty(cls, propName, propType, refCls, minCard, maxCard, attempt + 1);
         }
     }
     else {
         prop = CreateProperty(m_owlModel, propType, fullPropName.c_str());
         SetClassPropertyCardinalityRestriction(cls, prop, minCard, maxCard);
+        if (refCls) {
+            auto rc = GetClassByName(RdfModel(), refCls);
+            SetPropertyRangeRestriction(prop, rc, true);
+        }
     }
 
     return prop;
@@ -299,7 +303,7 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
         case rapidjson::kStringType:
         {
             auto val = value.GetString();
-            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_CHAR);
+            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_CHAR, nullptr);
             SetDatatypeProperty(instance, prop, val);
             break;
         }
@@ -307,7 +311,7 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
         case rapidjson::kNumberType:
         {
             auto val = value.GetDouble();
-            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE);
+            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE, nullptr);
             SetDatatypeProperty(instance, prop, val);
             break;
         }
@@ -316,15 +320,15 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
         case rapidjson::kFalseType:
         {
             auto val = value.GetBool();
-            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_BOOLEAN);
+            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_BOOLEAN, nullptr);
             SetDatatypeProperty(instance, prop, val);
             break;
         }
 
         case rapidjson::kObjectType:
         {
-            auto val = ConvertJsonObject(name, value);
-            auto prop = GetOrCreateProperty(cls, name, OBJECTPROPERTY_TYPE);
+            auto val = ConvertJsonObject(name, value);            
+            auto prop = GetOrCreateProperty(cls, name, OBJECTPROPERTY_TYPE, GetNameOfClass(GetInstanceClass(val)));
             SetObjectProperty(instance, prop, val);
             break;
         }
@@ -340,7 +344,7 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
                         for (auto& v : value.GetArray()) {
                             val.push_back(v.GetDouble());
                         }
-                        auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE, 0, -1);
+                        auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_DOUBLE, nullptr, 0, -1);
                         SetDatatypeProperty(instance, prop, val.data(), val.size());
                         break;
                     }

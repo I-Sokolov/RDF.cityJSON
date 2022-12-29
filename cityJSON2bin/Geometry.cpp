@@ -304,7 +304,7 @@ GEOM::GeometricItem Geometry::ConvertFace(rapidjson::Value& jloops, PerFaceData&
 
     auto semantic = fd.semantics.GetSurfaceSemantic(fd.indexPath);
     if (semantic) {
-        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE);
+        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE, OWL_SurfaceSemantic);
         SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 
