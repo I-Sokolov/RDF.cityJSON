@@ -280,6 +280,15 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, rapidjso
             break;
         }
 
+        case rapidjson::kTrueType:
+        case rapidjson::kFalseType:
+        {
+            auto val = value.GetBool();
+            auto prop = GetOrCreateProperty(cls, name, DATATYPEPROPERTY_TYPE_BOOLEAN);
+            SetDatatypeProperty(instance, prop, val);
+            break;
+        }
+
         default:
             LOG_CNV("Unsupported attribte type", name);
     }
