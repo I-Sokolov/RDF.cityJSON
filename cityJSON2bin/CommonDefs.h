@@ -40,6 +40,7 @@
 #define MEMBER_SURFACES         "surfaces"
 #define MEMBER_PARENT           "parent"
 #define MEMBER_CHILDREN         "children"
+#define MEMBER_ATTRIBUTES       "attributes"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"

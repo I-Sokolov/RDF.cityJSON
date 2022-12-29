@@ -121,9 +121,14 @@ void CityModel::ConvertCityJSONObject()
         auto id = o.name.GetString();
         auto& cityObject = o.value;
 
-        auto instance = ConvertCityObject(id, cityObject);
-        if (instance) {
-            owlObjects.push_back(instance);
+        try {
+            auto instance = ConvertCityObject(id, cityObject);
+            if (instance) {
+                owlObjects.push_back(instance);
+            }
+        }
+        catch (cityJson2bin_error err) {
+            LOG_CNV("Failed to convert city object", err.c_str());
         }
     }
 
@@ -143,6 +148,7 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
 {
     rapidjson::Value jtype;
     rapidjson::Value jgeometry;
+    rapidjson::Value attributes;
     
     for (auto& member : jobject.GetObject()) {
         auto memberName = member.name.GetString();
@@ -151,6 +157,9 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
         }
         else if (!strcmp(memberName, MEMBER_GEOMETRY)) {
             jgeometry = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_ATTRIBUTES)) {
+            attributes = member.value;
         }
         else {
             LOG_CNV("Unsupported city object member", memberName);
@@ -178,7 +187,15 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
     const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
     auto cls = GetOrCreateClass(clsname);
     GEOM::Collection instance = CreateInstance(cls, id);
+    
     instance.set_objects(items.data(), items.size());
+
+    if (!attributes.IsNull()) {
+        for (auto& attr : attributes.GetObject()) {
+            auto name = attr.name.GetString();
+            CreateAttribute(instance, name, attr.value);
+        }
+    }
 
     return instance;
 }
