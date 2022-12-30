@@ -212,7 +212,7 @@ int Appearance::GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, siz
             ind = it->second;
         }
 
-        if (ind > 0 && ind >= maxInd) {
+        if (ind >= 0 && ind >= maxInd) {
             LOG_CNV("Material or texture index is out of range", "");
             ind = -1;
         }

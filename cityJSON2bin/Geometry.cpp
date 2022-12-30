@@ -331,7 +331,6 @@ void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Li
 
         end = -2;
     }
-
 }
 
 //-----------------------------------------------------------------------------------------------
