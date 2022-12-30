@@ -388,13 +388,13 @@ void Geometry::AddTexturePoints(ListOfInt& jpoints, DoubleArray& coordinates, In
 //
 int64_t Geometry::GetAddTextureVertex(int jind, DoubleArray& coordinates, Int2Int64& v2v)
 {
-    auto it = v2v.insert(Int2Int64::value_type(jind, -1)).first;
+    auto ib = v2v.insert(Int2Int64::value_type(jind, -4));
 
-    if (it->second < 0) {
-        it->second = AddTextureVertex(jind, coordinates);
+    if (ib.second) {
+        ib.first->second = AddTextureVertex(jind, coordinates);
     }
 
-    return it->second;
+    return ib.first->second;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -403,10 +403,20 @@ int64_t Geometry::AddTextureVertex(int jind, DoubleArray& coordinates)
 {
     assert(coordinates.size() % 2 == 0);
 
-    auto& jpoint = GetTextureVertex(jind);
-    for (int i = 0; i < 2; i++) {
-        auto v = jpoint[i].GetDouble();
-        coordinates.push_back(v);
+    double v[2] = { 0,0 };
+    try
+    {
+        auto& jpoint = GetTextureVertex(jind);
+        for (int i = 0; i < 2; i++) {
+            v[i] = jpoint[i].GetDouble();
+        }
+        for (auto val : v) {
+            coordinates.push_back(val);
+        }
+    }
+    catch (cityJson2bin_error err) {
+        LOG_CNV("Invalid point or index", err.c_str());
+        return -3;
     }
 
     return coordinates.size() / 2 - 1;
