@@ -6,15 +6,13 @@ class Appearance
 {
 public:
     typedef std::map<std::string, int> Theme2Index;
-    typedef std::list<int> ListOfInt;
-    typedef std::list<ListOfInt> ListOfListOfInt;
     typedef std::map<std::string, ListOfListOfInt> Theme2TextureIndecies;
 
     struct SurfaceAppearance
     {
         Theme2Index             materials;
         Theme2Index             textures;
-        Theme2TextureIndecies   textureVerticies;
+        Theme2TextureIndecies   textureIndecies;
     };
 
 public:
@@ -26,6 +24,8 @@ public:
     void GetSurfaceAppearance(SurfaceAppearance& appearance, rapidjson::Value& jmaterial, rapidjson::Value& jtexture, UIntList& faceIndexPath);
     
     GEOM::Material GetRdfMaterial(Theme2Index& materials, Theme2Index& textures);
+    ListOfListOfInt* GetTextuteIndecies(Theme2Index& textures, Theme2TextureIndecies& textureIndecies);
+    rapidjson::Value& GetTextureVertex(int ind) { return m_textureVerticies[ind]; }
 
 private:
     void SetCityMaterials(rapidjson::Value& materials);
@@ -64,7 +64,10 @@ private:
 
 private:
     rapidjson::Value* FindValueByIndexPath(rapidjson::Value& jnode, UIntList& faceIndexPath);    
+
+    const char* GetActiveTheme(Theme2Index& th2ind, const char* defaultTheme);
     int GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, size_t maxInd);
+
     GEOM::Color GetRdfColor(int iMat);
     GEOM::ColorComponent CreateColorComponent(double rgb[3], double scale = -1);
     GEOM::Texture GetRdfTexture(int iTex);

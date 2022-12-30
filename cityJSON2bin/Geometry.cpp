@@ -255,7 +255,9 @@ void Geometry::AddFaceToGroups(FaceGroups& fgroups, rapidjson::Value& boundaries
 
     FaceGroup& group = GetOrCreateGroup(fgroups, key);
 
-    AddFaceToGroup(group, boundaries, app.textureVerticies);
+    auto texVertIndecies = m_cityModel.GetAppearance().GetTextuteIndecies(group.key.textures, app.textureIndecies);
+
+    AddFaceToGroup(group, boundaries, texVertIndecies);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -296,14 +298,40 @@ bool Geometry::KeysEqual(FaceGroupKey const& key1, FaceGroupKey& key2)
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Appearance::Theme2TextureIndecies& texIndecies)
+void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, ListOfListOfInt* texIndecies)
 {
+    if (texIndecies) {
+        if (texIndecies->size() != boundaries.Size()) {
+            LOG_CNV("Texture indecies loops size mismatch number of loops in boundary", "");
+        }
+    }
+
+    ListOfListOfInt::iterator itTex;
+    if (texIndecies) {
+        itTex = texIndecies->begin();
+    }
+
     int end = -1;
+
     for (auto& jloop : boundaries.GetArray()) {
+
         AddPoints(jloop, faces.coordinates, faces.indecies, faces.cityVert2Coord);
         faces.indecies.push_back(end);
+
+        if (texIndecies && itTex != texIndecies->end()) {
+            ListOfInt& texLoop = *itTex;
+            if (texLoop.size() != jloop.Size()) {
+                LOG_CNV("Texture indecies size mismatch number of points in loop", "");
+            }
+            AddTexturePoints(texLoop, faces.texCoordinates, faces.texIndecies, faces.texVert2Coord);
+
+            itTex++;
+        }
+        faces.texIndecies.push_back(end);
+
         end = -2;
     }
+
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -325,7 +353,7 @@ int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinate
     auto it = v2v.insert(Int2Int64::value_type(jcityVertexInd, -1)).first;
 
     if (it->second < 0) {
-        it->second = AddVertx(jcityVertexInd, coordinates);
+        it->second = AddVertex(jcityVertexInd, coordinates);
     }
 
     return it->second;
@@ -333,7 +361,7 @@ int64_t Geometry::GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinate
 
 //-----------------------------------------------------------------------------------------------
 //
-int64_t Geometry::AddVertx(int vertexInd, DoubleArray& coordinates)
+int64_t Geometry::AddVertex(int vertexInd, DoubleArray& coordinates)
 {
     assert(coordinates.size() % 3 == 0);
 
@@ -344,6 +372,44 @@ int64_t Geometry::AddVertx(int vertexInd, DoubleArray& coordinates)
     }
 
     return coordinates.size() / 3 - 1;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void Geometry::AddTexturePoints(ListOfInt& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v)
+{
+    for (auto& jpoint : jpoints) {
+        auto i = GetAddTextureVertex(jpoint, coordinates, v2v);
+        ind.push_back(i);
+    }
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+int64_t Geometry::GetAddTextureVertex(int jind, DoubleArray& coordinates, Int2Int64& v2v)
+{
+    auto it = v2v.insert(Int2Int64::value_type(jind, -1)).first;
+
+    if (it->second < 0) {
+        it->second = AddTextureVertex(jind, coordinates);
+    }
+
+    return it->second;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+int64_t Geometry::AddTextureVertex(int jind, DoubleArray& coordinates)
+{
+    assert(coordinates.size() % 2 == 0);
+
+    auto& jpoint = GetTextureVertex(jind);
+    for (int i = 0; i < 2; i++) {
+        auto v = jpoint[i].GetDouble();
+        coordinates.push_back(v);
+    }
+
+    return coordinates.size() / 2 - 1;
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -366,6 +432,19 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
     if (semantic) {
         auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE, OWL_SurfaceSemantic);
         SetObjectTypeProperty(face, prop, &semantic, 1);
+    }
+
+    bool hasTexInd = false;
+    for (auto ind : group.texIndecies) {
+        if (ind >= 0) {
+            hasTexInd = true;
+            break;
+        }
+    }
+
+    if (hasTexInd) {
+        face.set_textureCoordinates(group.texCoordinates);
+        face.set_textureIndices(group.texIndecies);
     }
 
     return face;
@@ -397,6 +476,14 @@ rapidjson::Value& Geometry::GetVertex(int vertexInd)
     else
         return m_jcityVerticies[vertexInd];
 }
+
+//-----------------------------------------------------------------------------------------------
+//
+rapidjson::Value& Geometry::GetTextureVertex(int vertexInd)
+{
+    return m_cityModel.GetAppearance().GetTextureVertex(vertexInd);
+}
+
 
 //-----------------------------------------------------------------------------------------------
 //

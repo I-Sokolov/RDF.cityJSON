@@ -172,7 +172,7 @@ void Appearance::GetSurfaceAppearance(SurfaceAppearance& appearance, rapidjson::
 
                 if (!hasNull) {
                     auto ib1 = appearance.textures.insert(Theme2Index::value_type(theme, texInd));
-                    auto ib2 = appearance.textureVerticies.insert(Theme2TextureIndecies::value_type(theme, ListOfListOfInt()));
+                    auto ib2 = appearance.textureIndecies.insert(Theme2TextureIndecies::value_type(theme, ListOfListOfInt()));
                     std::swap(ib2.first->second, uv2);
                 }
             }
@@ -182,22 +182,40 @@ void Appearance::GetSurfaceAppearance(SurfaceAppearance& appearance, rapidjson::
 
 //-----------------------------------------------------------------------------------------------
 //
+const char* Appearance::GetActiveTheme(Theme2Index& th2ind, const char* defaultTheme) {
+    auto theme = defaultTheme;
+
+    if (theme) {
+        if (th2ind.find(theme) == th2ind.end()) {
+            theme = nullptr;
+        }
+    }
+
+    if (!theme && !th2ind.empty()) {
+        theme = th2ind.begin()->first.c_str();
+    }
+
+    return theme;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
 int Appearance::GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, size_t maxInd)
 {
     int ind = -1;
-    if (defaultTheme) {
-        auto it = th2ind.find(defaultTheme);
+    
+    auto theme = GetActiveTheme(th2ind, defaultTheme);
+    if (theme) {
+  
+        auto it = th2ind.find(theme);
         if (it != th2ind.end()) {
             ind = it->second;
         }
-    }
-    else if (maxInd > 0) {
-        ind = 0;
-    }
 
-    if (ind > 0 && ind >= maxInd) {
-        LOG_CNV("Material or texture index is out of range", "");
-        ind = -1;
+        if (ind > 0 && ind >= maxInd) {
+            LOG_CNV("Material or texture index is out of range", "");
+            ind = -1;
+        }
     }
 
     return ind;
@@ -225,6 +243,23 @@ GEOM::Material Appearance::GetRdfMaterial(Theme2Index& materials, Theme2Index& t
     }
 
     return rdfMat;
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+ListOfListOfInt* Appearance::GetTextuteIndecies(Theme2Index& textures, Theme2TextureIndecies& textureIndecies)
+{
+    auto theme = GetActiveTheme(textures, m_defaultThemeTexture);
+    if (theme) {
+        auto it = textureIndecies.find(theme);
+        if (it != textureIndecies.end()) {
+            return &(it->second);
+        }
+        else {
+            LOG_CNV("Theme is misses in texture indecies", theme);
+        }
+    }
+    return nullptr;
 }
 
 //-----------------------------------------------------------------------------------------------

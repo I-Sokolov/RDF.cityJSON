@@ -65,6 +65,8 @@ typedef std::list<unsigned int> UIntList;
 typedef std::vector<double>     DoubleArray;
 typedef std::vector<int64_t>    Int64Array;
 typedef std::map<int,int64_t>   Int2Int64;
+typedef std::list<int>          ListOfInt;
+typedef std::list<ListOfInt>    ListOfListOfInt;
 
 //====================================================================
 

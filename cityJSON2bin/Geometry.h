@@ -10,12 +10,10 @@ public:
     Geometry(CityModel& cityModel) : m_cityModel(cityModel), m_bUseTemplateVerticies (false) {}
 
     void SetCityVerticies(rapidjson::Value& jverticies) { m_jcityVerticies = jverticies; }
-    rapidjson::Value& GetVertex(int vertexInd);
 
     void SetGeometryTemplates(rapidjson::Value& jtemplates);
 
     void Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items);
-
 
 private:
     struct Template
@@ -50,6 +48,10 @@ private:
         DoubleArray         coordinates;
         Int64Array          indecies;
         Int2Int64           cityVert2Coord;
+
+        DoubleArray         texCoordinates;
+        Int64Array          texIndecies;
+        Int2Int64           texVert2Coord;
     };
 
     typedef std::list<FaceGroup> FaceGroups;
@@ -68,10 +70,17 @@ private:
     FaceGroup& GetOrCreateGroup(FaceGroups& fgroups, FaceGroupKey& key);
     bool KeysEqual(FaceGroupKey const& key1, FaceGroupKey& key2);
 
-    void AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Appearance::Theme2TextureIndecies& texIndecies);
+    void AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, ListOfListOfInt* texIndecies);
+
     void AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v);
     int64_t GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Int2Int64& v2v);
-    int64_t AddVertx(int vertexInd, DoubleArray& coordinates);
+    int64_t AddVertex(int vertexInd, DoubleArray& coordinates);
+    rapidjson::Value& GetVertex(int vertexInd);
+
+    void AddTexturePoints(ListOfInt& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v);
+    int64_t GetAddTextureVertex(int jind, DoubleArray& coordinates, Int2Int64& v2v);
+    int64_t AddTextureVertex(int jind, DoubleArray& coordinates);
+    rapidjson::Value& GetTextureVertex(int jind);
 
     GEOM::GeometricItem CreateFaceGroup(FaceGroup& group);
 
