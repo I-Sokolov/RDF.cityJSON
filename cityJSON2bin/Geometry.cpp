@@ -47,7 +47,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         //
         //
         const char* type = nullptr;
-        const char* lod = nullptr;
+        rapidjson::Value lod;
         rapidjson::Value boundaries;
         rapidjson::Value jtemplate;
         rapidjson::Value jtransformation;
@@ -60,7 +60,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
                 type = it->value.GetString();
             }
             else if (!strcmp(memberName, MEMBER_LOD)) {
-                lod = it->value.GetString();
+                lod = it->value;
             }
             else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
                 boundaries = it->value;
@@ -126,6 +126,10 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         }
 
         assert(faceIndexPath.empty());
+
+        if (item && !lod.IsNull()) {
+            m_cityModel.CreateAttribute(item, "LoD", lod);
+        }
     }
     catch (cityJson2bin_error err) {
         item = 0;
