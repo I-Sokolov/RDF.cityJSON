@@ -251,12 +251,22 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, R
     auto prop = GetPropertyByName(m_owlModel, fullPropName.c_str());
     if (prop) {
         auto ptype = GetPropertyType(prop);
+        if (ptype != propType) {
+            LOG_CNV("Porperty exists but traits mismatches", fullPropName.c_str());
+            prop = GetOrCreateProperty(cls, propName, propType, refCls, minCard, maxCard, attempt + 1);
+        }
+        else {
         int64_t minC = 0;
         int64_t maxC = 0;
         GetClassPropertyCardinalityRestriction(cls, prop, &minC, &maxC);
-        if (ptype != propType || minC != minCard || maxC != maxCard) {
-            LOG_CNV("Porperty exists but traits mismatches", fullPropName.c_str());
+            if (minC == -1 && maxC == -1) {
+                SetClassPropertyCardinalityRestriction(cls, prop, minCard, maxCard);
+            }
+            else if (minC != minCard || maxC != maxCard) {
+                LOG_CNV("Porperty exists but cardinality mismatches", fullPropName.c_str());
             prop = GetOrCreateProperty(cls, propName, propType, refCls, minCard, maxCard, attempt + 1);
+        }
+
         }
     }
     else {
