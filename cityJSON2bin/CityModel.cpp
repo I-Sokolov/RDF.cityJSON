@@ -124,7 +124,7 @@ void CityModel::ConvertCityJSONObject()
         //if (iObject != 6)
         //    continue;
 
-        auto id = o.name.GetString();
+        auto& id = o.name;
         auto& cityObject = o.value;
 
         try {
@@ -155,7 +155,7 @@ void CityModel::ConvertCityJSONObject()
 
 //-----------------------------------------------------------------------------------------------
 //
-OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobject)
+OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value& jobject)
 {
     rapidjson::Value jtype;
     rapidjson::Value jgeometry;
@@ -197,7 +197,7 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
 
     const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
     auto cls = GetOrCreateClass(clsname);
-    GEOM::Collection instance = CreateInstance(cls, id);
+    GEOM::Collection instance = CreateInstance(cls, id.GetString());
     
     instance.set_objects(items.data(), items.size());
 
@@ -207,6 +207,8 @@ OwlInstance CityModel::ConvertCityObject(const char* id, rapidjson::Value& jobje
             CreateAttribute(instance, name, attr.value);
         }
     }
+
+    CreateAttribute(instance, OWL_CityJsonPrefix "ObjectId", id);
 
     return instance;
 }
@@ -256,16 +258,16 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, R
             prop = GetOrCreateProperty(cls, propName, propType, refCls, minCard, maxCard, attempt + 1);
         }
         else {
-        int64_t minC = 0;
-        int64_t maxC = 0;
-        GetClassPropertyCardinalityRestriction(cls, prop, &minC, &maxC);
+            int64_t minC = 0;
+            int64_t maxC = 0;
+            GetClassPropertyCardinalityRestriction(cls, prop, &minC, &maxC);
             if (minC == -1 && maxC == -1) {
                 SetClassPropertyCardinalityRestriction(cls, prop, minCard, maxCard);
             }
             else if (minC != minCard || maxC != maxCard) {
                 LOG_CNV("Porperty exists but cardinality mismatches", fullPropName.c_str());
-            prop = GetOrCreateProperty(cls, propName, propType, refCls, minCard, maxCard, attempt + 1);
-        }
+                prop = GetOrCreateProperty(cls, propName, propType, refCls, minCard, maxCard, attempt + 1);
+            }
 
         }
     }
