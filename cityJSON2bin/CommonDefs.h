@@ -39,6 +39,7 @@
 #define MEMBER_SEMANTICS        "semantics"
 #define MEMBER_SURFACES         "surfaces"
 #define MEMBER_PARENT           "parent"
+#define MEMBER_PARENTS          "parents"
 #define MEMBER_CHILDREN         "children"
 #define MEMBER_ATTRIBUTES       "attributes"
 #define MEMBER_METADATA         "metadata"

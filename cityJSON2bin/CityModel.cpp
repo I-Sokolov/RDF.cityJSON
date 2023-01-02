@@ -160,6 +160,8 @@ OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value&
     rapidjson::Value jtype;
     rapidjson::Value jgeometry;
     rapidjson::Value attributes;
+    rapidjson::Value parents;
+    rapidjson::Value children;
     
     for (auto& member : jobject.GetObject()) {
         auto memberName = member.name.GetString();
@@ -171,6 +173,12 @@ OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value&
         }
         else if (!strcmp(memberName, MEMBER_ATTRIBUTES)) {
             attributes = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_PARENTS)) {
+            parents = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_CHILDREN)) {
+            children = member.value;
         }
         else {
             LOG_CNV("Unsupported city object member", memberName);
@@ -184,12 +192,6 @@ OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value&
     std::vector<GEOM::GeometricItem> items;
     if (jgeometry.IsArray()) {
         m_geometry.Convert(jgeometry, items);
-    }
-    else {
-        LOG_CNV("City object has no geometry", type);
-    }
-    if (items.empty()) {
-        return 0;
     }
 
     std::string owlType(OWL_CityJsonPrefix);
