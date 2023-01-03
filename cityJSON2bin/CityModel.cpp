@@ -117,7 +117,7 @@ void CityModel::ConvertCityJSONObject()
 
     //
     //
-    std::vector<OwlInstance> owlObjects;
+    CityObjects objects;
     int iObject = 0;
     for (auto& o : cityObjects.GetObject()) {
         iObject++;
@@ -128,15 +128,18 @@ void CityModel::ConvertCityJSONObject()
         auto& cityObject = o.value;
 
         try {
-            auto instance = ConvertCityObject(id, cityObject);
-            if (instance) {
-                owlObjects.push_back(instance);
-            }
+            CityObject& object = objects[id.GetString()];
+            ConvertCityObject(object, id, cityObject);
         }
         catch (cityJson2bin_error err) {
             LOG_CNV("Failed to convert city object", err.c_str());
         }
     }
+
+    //
+    //
+    OwlInstances owlObjects;
+    SetupChildren(objects, owlObjects);
 
     //
     //
@@ -152,16 +155,66 @@ void CityModel::ConvertCityJSONObject()
     CreateAttribute(city, MEMBER_METADATA, metadata);
 }
 
+//-----------------------------------------------------------------------------------------------
+//
+void CityModel::SetupChildren(CityObjects& objects, OwlInstances& topLevel)
+{
+    // complete parent-children
+    //
+    for (auto& object : objects) {
+        for (auto& parentId : object.second.parents) {
+            auto parent = objects[parentId];
+            parent.children.insert(object.first);
+        }
+
+        for (auto& childId : object.second.children) {
+            auto child = objects[childId];
+            child.parents.insert(object.first);
+        }
+    }
+
+    //
+    //
+    for (auto& object : objects) {
+        if (object.second.owlObject) {
+
+            std::vector<OwlInstance> owlChildren;
+            for (auto& childId : object.second.children) {
+                auto child = objects[childId];
+                if (child.owlObject) {
+                    owlChildren.push_back(child.owlObject);
+                }
+            }
+
+            if (!owlChildren.empty()) {
+                auto prop = GetPropertyByName(m_owlModel, OWL_PropChildren);
+                assert(prop);
+                int64_t* rold = NULL;
+                int64_t nold = 0;
+                GetObjectTypeProperty(object.second.owlObject, prop, &rold, &nold);
+                if (rold && nold) {
+                    for (int64_t i = 0; i < nold; i++) {
+                        owlChildren.push_back (rold[i]);
+                    }
+                }
+                SetObjectTypeProperty(object.second.owlObject, prop, owlChildren.data(), owlChildren.size());
+            }
+
+            if (object.second.parents.empty()) {
+                topLevel.push_back(object.second.owlObject);
+            }
+        }
+    }
+}
+
 
 //-----------------------------------------------------------------------------------------------
 //
-OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value& jobject)
+void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapidjson::Value& jobject)
 {
     rapidjson::Value jtype;
     rapidjson::Value jgeometry;
     rapidjson::Value attributes;
-    rapidjson::Value parents;
-    rapidjson::Value children;
     
     for (auto& member : jobject.GetObject()) {
         auto memberName = member.name.GetString();
@@ -175,10 +228,14 @@ OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value&
             attributes = member.value;
         }
         else if (!strcmp(memberName, MEMBER_PARENTS)) {
-            parents = member.value;
+           for (auto& parent : member.value.GetArray()) {
+                object.parents.insert(parent.GetString());
+            }
         }
         else if (!strcmp(memberName, MEMBER_CHILDREN)) {
-            children = member.value;
+            for (auto& child : member.value.GetArray()) {
+                object.children.insert(child.GetString());
+            }
         }
         else {
             LOG_CNV("Unsupported city object member", memberName);
@@ -200,7 +257,8 @@ OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value&
     const char* clsname[] = { owlType.c_str() , OWL_Collection, NULL };
     auto cls = GetOrCreateClass(clsname);
     GEOM::Collection instance = CreateInstance(cls, id.GetString());
-    
+    object.owlObject = instance;
+
     instance.set_objects(items.data(), items.size());
 
     if (!attributes.IsNull()) {
@@ -211,8 +269,6 @@ OwlInstance CityModel::ConvertCityObject(rapidjson::Value& id, rapidjson::Value&
     }
 
     CreateAttribute(instance, OWL_CityJsonPrefix "ObjectId", id);
-
-    return instance;
 }
 
 //-----------------------------------------------------------------------------------------------

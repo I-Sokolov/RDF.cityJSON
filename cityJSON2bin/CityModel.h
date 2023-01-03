@@ -23,12 +23,24 @@ public:
     Geometry& GetGeometry() { return m_geometry; }
 
 private:
+    struct CityObject {
+        OwlInstance  owlObject = NULL;
+        ListOfString parents;
+        ListOfString children;
+    };
+
+    typedef std::map<std::string, CityObject> CityObjects;
+
+    typedef std::vector<OwlInstance> OwlInstances;
+
+private:
     void ReadCityFile(const char* cityFilePath);
     void SaveBinFile(const char* rdfFilePath);
 
     void ConvertCityJSONObject();
+    void ConvertCityObject(CityObject& object, rapidjson::Value& id, rapidjson::Value& jobject);
+    void SetupChildren(CityObjects& objects, OwlInstances& topLevel);
 
-    OwlInstance ConvertCityObject(rapidjson::Value& id, rapidjson::Value& jobject);
     OwlInstance ConvertJsonObject(const char* name, rapidjson::Value& value);
 private:
     OwlModel                m_owlModel;

@@ -59,6 +59,7 @@
 #define OWL_Collection                  "Collection"
 #define OWL_Transformation              "Transformation"
 #define OWL_SurfaceSemantic             OWL_CityJsonPrefix "SurfaceSemantic"
+#define OWL_PropChildren                "objects"
 
 //====================================================================
 
@@ -68,6 +69,7 @@ typedef std::vector<int64_t>    Int64Array;
 typedef std::map<int,int64_t>   Int2Int64;
 typedef std::list<int>          ListOfInt;
 typedef std::list<ListOfInt>    ListOfListOfInt;
+typedef std::set<std::string>   ListOfString;
 
 //====================================================================
 
