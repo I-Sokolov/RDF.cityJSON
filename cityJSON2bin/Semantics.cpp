@@ -122,7 +122,7 @@ OwlInstance Semantics::GetOwlInstance(Surface& surf)
             auto& parent = m_surfaces[surf.parent];
             auto owlParent = GetOwlInstance(parent);
             if (owlParent) {
-                prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_PARENT, OWL_CityJsonPrefix, OBJECTPROPERTY_TYPE, clsname[0]);
+                prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_PARENT, OWL_PropCityJsonPrefix, OBJECTPROPERTY_TYPE, clsname[0]);
                 SetObjectProperty(surf.owlInstance, prop, owlParent);
             }
         }

@@ -164,8 +164,8 @@ void CityModel::ConvertCityJSONObject()
     //
     SetProperty(city, OWL_PropChildren, owlObjects);
 
-    CreateAttribute(city, MEMBER_TRANSFORM, OWL_CityJsonPrefix, transform);
-    CreateAttribute(city, MEMBER_METADATA, OWL_CityJsonPrefix, metadata);
+    CreateAttribute(city, MEMBER_TRANSFORM, OWL_PropCityJsonPrefix, transform);
+    CreateAttribute(city, MEMBER_METADATA, OWL_PropCityJsonPrefix, metadata);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -303,7 +303,7 @@ OwlClass CityModel::GetOrCreateClass(const char* names[], bool addPrefix)
     
     std::string prefixedName;
     if (addPrefix) {
-        prefixedName.assign(OWL_CityJsonPrefix);
+        prefixedName.assign(OWL_ClsCityJsonPrefix);
         prefixedName.append(name);
         name = prefixedName.c_str();
     }

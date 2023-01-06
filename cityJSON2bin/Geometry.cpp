@@ -443,7 +443,7 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
 
     auto semantic = group.key.semantic;
     if (semantic) {
-        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OWL_CityJsonPrefix, OBJECTPROPERTY_TYPE, OWL_ClsSurfaceSemantic);
+        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OWL_PropCityJsonPrefix, OBJECTPROPERTY_TYPE, OWL_ClsSurfaceSemantic);
         SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 
