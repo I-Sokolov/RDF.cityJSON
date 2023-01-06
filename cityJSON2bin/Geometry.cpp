@@ -128,7 +128,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
         assert(faceIndexPath.empty());
 
         if (item && !lod.IsNull()) {
-            m_cityModel.CreateAttribute(item, "LoD", lod);
+            m_cityModel.CreateAttribute(item, OWL_PropLOD, NULL, lod);
         }
     }
     catch (cityJson2bin_error err) {
@@ -418,7 +418,7 @@ int64_t Geometry::AddTextureVertex(int jind, DoubleArray& coordinates)
         }
     }
     catch (cityJson2bin_error err) {
-        LOG_CNV("Invalid point or index", err.c_str());
+        LOG_CNV("Invalid texture verex index or coordinates", err.c_str());
         return -3;
     }
 

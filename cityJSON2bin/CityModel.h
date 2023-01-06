@@ -17,7 +17,7 @@ public:
     OwlModel RdfModel() { return m_owlModel; }    
     OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/, bool addPrefix);
     RdfProperty GetOrCreateProperty(OwlClass cls, const char* propName, const char* prefix, RdfPropertyType propType, const char* refCls = nullptr, int64_t minCard = 0, int64_t maxCard = 1, int attempt = 0);
-    void CreateAttribute(OwlInstance instance, const char* name, rapidjson::Value& value);
+    void CreateAttribute(OwlInstance instance, const char* name, const char* prefix, rapidjson::Value& value);
 
     Appearance& GetAppearance() { return m_appearance; }
     Geometry& GetGeometry() { return m_geometry; }

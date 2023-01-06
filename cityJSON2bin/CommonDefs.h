@@ -67,6 +67,7 @@
 #define OWL_PropChildren                "children"
 #define OWL_PropObjectId                OWL_CityJsonPrefix "Id"
 #define OWL_PropType                    OWL_CityJsonPrefix "Type"
+#define OWL_PropLOD                     OWL_CityJsonPrefix "LoD"
 #define OWL_PropAttrPrefix              OWL_CityJsonPrefix "Attribute."
 
 //====================================================================

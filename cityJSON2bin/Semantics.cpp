@@ -128,7 +128,7 @@ OwlInstance Semantics::GetOwlInstance(Surface& surf)
         }
 
         for (auto& attr : surf.attributes) {
-            m_cityModel.CreateAttribute(surf.owlInstance, attr.name, attr.value);
+            m_cityModel.CreateAttribute(surf.owlInstance, attr.name, OWL_PropAttrPrefix, attr.value);
         }
 
         surf.attributes.clear();
