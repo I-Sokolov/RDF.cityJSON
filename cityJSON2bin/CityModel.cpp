@@ -28,7 +28,7 @@ void CityModel::Convert(const char* cityFilePath, const char* rdfFilePath)
 {
     ReadCityFile(cityFilePath);
 
-    CreateCommonClasses();
+    CreateBaseClasses();
 
     ConvertCityJSONObject();
 
@@ -73,13 +73,18 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityModel::CreateCommonClasses()
+void CityModel::CreateBaseClasses()
 {
     const char* clsnameGenericObject[] = { OWL_ClsCityJSONGenericObject, NULL };    
     auto clsGenericObject = GetOrCreateClass(clsnameGenericObject, false);
     
     GetOrCreateProperty(clsGenericObject, OWL_PropRepresentation, NULL, OBJECTPROPERTY_TYPE, OWL_GeometricItem, 0, -1);
     GetOrCreateProperty(clsGenericObject, OWL_PropChildren, NULL, OBJECTPROPERTY_TYPE, OWL_ClsCityJSONGenericObject, 0, -1);
+
+    const char* clsnameGeometricItem[] = { OWL_ClsGeomItem, OWL_Collection, NULL };
+    /*auto clsGeometricItem =*/ GetOrCreateClass(clsnameGeometricItem, false);
+
+    //GetOrCreateProperty(clsGeometricItem, OWL_PropLOD, NULL, DATATYPEPROPERTY_TYPE_CHAR);
 }
 
 //-----------------------------------------------------------------------------------------------

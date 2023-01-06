@@ -157,7 +157,7 @@ GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, Pe
 //
 GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    const char* clsnames[] = {className , OWL_Collection, NULL };
+    const char* clsnames[] = {className , OWL_ClsGeomItem, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
     std::vector<GEOM::GeometricItem> solids;
@@ -181,7 +181,7 @@ GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::
 //
 GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    const char* clsnames[] = { TYPE_Solid, OWL_Collection, NULL };
+    const char* clsnames[] = { TYPE_Solid, OWL_ClsGeomItem, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
     std::vector<GEOM::GeometricItem> shells;
@@ -236,7 +236,7 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
         }
     }
 
-    const char* clsnames[] = { className , OWL_Collection, NULL };
+    const char* clsnames[] = { className , OWL_ClsGeomItem, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
     GEOM::Collection multiSurface = CreateInstance(cls);
@@ -443,7 +443,7 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
 
     auto semantic = group.key.semantic;
     if (semantic) {
-        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OWL_PropCityJsonPrefix, OBJECTPROPERTY_TYPE, OWL_ClsSurfaceSemantic);
+        auto prop = m_cityModel.GetOrCreateProperty(cls, OWL_PropSemantic, NULL, OBJECTPROPERTY_TYPE, OWL_ClsSurfaceSemantic);
         SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 

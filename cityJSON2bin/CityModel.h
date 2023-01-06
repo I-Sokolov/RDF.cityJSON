@@ -35,7 +35,7 @@ private:
     void ReadCityFile(const char* cityFilePath);
     void SaveBinFile(const char* rdfFilePath);
 
-    void CreateCommonClasses();
+    void CreateBaseClasses();
     void SetProperty(OwlInstance instance, const char* propName, OwlInstances& value);
     OwlInstance ConvertAttributeObject(const char* name, rapidjson::Value& value);
 

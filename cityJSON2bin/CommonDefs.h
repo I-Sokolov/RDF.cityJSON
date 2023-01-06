@@ -59,17 +59,19 @@
 #define OWL_Collection                  "Collection"
 #define OWL_Transformation              "Transformation"
 
-#define OWL_ClsCityJsonPrefix           "cityJSON."
-#define OWL_ClsCityJSONGenericObject    OWL_ClsCityJsonPrefix "GenericObject"
+#define OWL_ClsCityJsonPrefix           "City."
+#define OWL_ClsCityJSONGenericObject    OWL_ClsCityJsonPrefix "Object"
 #define OWL_ClsSurfaceSemantic          OWL_ClsCityJsonPrefix "SurfaceSemantic"
+#define OWL_ClsGeomItem                 OWL_ClsCityJsonPrefix "GeometricItem"
 #define OWL_ClsSurface                  OWL_ClsCityJsonPrefix "Surface"
 #define OWL_PropRepresentation          "representation"
 #define OWL_PropChildren                "children"
-#define OWL_PropCityJsonPrefix          "cityJSON.prop."
-#define OWL_PropObjectId                OWL_PropCityJsonPrefix "Id"
-#define OWL_PropType                    OWL_PropCityJsonPrefix "Type"
+#define OWL_PropCityJsonPrefix          "city.prop."
+#define OWL_PropObjectId                OWL_PropCityJsonPrefix "id"
+#define OWL_PropType                    OWL_PropCityJsonPrefix "type"
 #define OWL_PropLOD                     OWL_PropCityJsonPrefix "LoD"
-#define OWL_PropAttrPrefix              OWL_PropCityJsonPrefix "Attribute."
+#define OWL_PropSemantic                OWL_PropCityJsonPrefix "semantic"
+#define OWL_PropAttrPrefix              OWL_PropCityJsonPrefix "attr."
 
 //====================================================================
 
