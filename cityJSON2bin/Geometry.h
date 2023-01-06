@@ -13,7 +13,7 @@ public:
 
     void SetGeometryTemplates(rapidjson::Value& jtemplates);
 
-    void Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items);
+    void Convert(rapidjson::Value& jgeometry, OwlInstances& items);
 
 private:
     struct Template

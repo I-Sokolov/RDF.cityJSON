@@ -54,22 +54,31 @@
 #define TYPE_CompositeSolid     "CompositeSolid"
 #define TYPE_GeometryInstance   "GeometryInstance"
 
-#define OWL_CityJsonPrefix              "cityJSON."
+#define OWL_GeometricItem               "GeometricItem"
 #define OWL_BoundaryRepresentation      "BoundaryRepresentation"
 #define OWL_Collection                  "Collection"
 #define OWL_Transformation              "Transformation"
-#define OWL_SurfaceSemantic             OWL_CityJsonPrefix "SurfaceSemantic"
-#define OWL_PropChildren                "objects"
+
+#define OWL_CityJsonPrefix              "cityJSON."
+#define OWL_ClsCityJSONGenericObject    OWL_CityJsonPrefix "GenericObject"
+#define OWL_ClsSurfaceSemantic          OWL_CityJsonPrefix "SurfaceSemantic"
+#define OWL_ClsSurface                  OWL_CityJsonPrefix "Surface"
+#define OWL_PropRepresentation          "representation"
+#define OWL_PropChildren                "children"
+#define OWL_PropObjectId                OWL_CityJsonPrefix "Id"
+#define OWL_PropType                    OWL_CityJsonPrefix "Type"
+#define OWL_PropAttrPrefix              OWL_CityJsonPrefix "Attribute."
 
 //====================================================================
 
-typedef std::list<unsigned int> UIntList;
-typedef std::vector<double>     DoubleArray;
-typedef std::vector<int64_t>    Int64Array;
-typedef std::map<int,int64_t>   Int2Int64;
-typedef std::list<int>          ListOfInt;
-typedef std::list<ListOfInt>    ListOfListOfInt;
-typedef std::set<std::string>   ListOfString;
+typedef std::list<unsigned int>     UIntList;
+typedef std::vector<double>         DoubleArray;
+typedef std::vector<int64_t>        Int64Array;
+typedef std::map<int,int64_t>       Int2Int64;
+typedef std::list<int>              ListOfInt;
+typedef std::list<ListOfInt>        ListOfListOfInt;
+typedef std::set<std::string>       ListOfString;
+typedef std::vector<OwlInstance>    OwlInstances;
 
 //====================================================================
 

@@ -110,11 +110,11 @@ OwlInstance Semantics::GetOwlInstance(Surface& surf)
 {
     if (!surf.type.IsNull()) {
 
-        const char* clsname[] = { OWL_SurfaceSemantic, NULL };
-        auto cls = m_cityModel.GetOrCreateClass(clsname);
+        const char* clsname[] = { OWL_ClsSurfaceSemantic, NULL };
+        auto cls = m_cityModel.GetOrCreateClass(clsname, false);
         surf.owlInstance = CreateInstance(cls);
 
-        auto prop = m_cityModel.GetOrCreateProperty(cls, "cityJSON_Type", DATATYPEPROPERTY_TYPE_CHAR);
+        auto prop = m_cityModel.GetOrCreateProperty(cls, OWL_PropType, NULL, DATATYPEPROPERTY_TYPE_CHAR);
         const char* type = surf.type.GetString();
         SetDatatypeProperty(surf.owlInstance, prop, type);
 
@@ -122,7 +122,7 @@ OwlInstance Semantics::GetOwlInstance(Surface& surf)
             auto& parent = m_surfaces[surf.parent];
             auto owlParent = GetOwlInstance(parent);
             if (owlParent) {
-                prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_PARENT, OBJECTPROPERTY_TYPE, clsname[0]);
+                prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_PARENT, OWL_CityJsonPrefix, OBJECTPROPERTY_TYPE, clsname[0]);
                 SetObjectProperty(surf.owlInstance, prop, owlParent);
             }
         }

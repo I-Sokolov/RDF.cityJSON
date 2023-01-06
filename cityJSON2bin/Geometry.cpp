@@ -8,7 +8,7 @@
 
 //-----------------------------------------------------------------------------------------------
 //
-void Geometry::Convert(rapidjson::Value& jgeometry, std::vector<GEOM::GeometricItem>& items)
+void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
 {
     //std::vector<std::string, std::list<GEOM::GeometricItem>> lod2items;
 
@@ -143,14 +143,14 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 //
 GEOM::GeometricItem Geometry::ConvertCompositeSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_CompositeSolid, boundaries, fd);
+    return ConvertSolidSet(TYPE_CompositeSolid, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
 GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSolidSet(OWL_CityJsonPrefix TYPE_MultiSolid, boundaries, fd);
+    return ConvertSolidSet(TYPE_MultiSolid, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, Pe
 GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd)
 {
     const char* clsnames[] = {className , OWL_Collection, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
     std::vector<GEOM::GeometricItem> solids;
     fd.indexPath.push_back(0);
@@ -181,8 +181,8 @@ GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::
 //
 GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    const char* clsnames[] = { OWL_CityJsonPrefix TYPE_Solid, OWL_Collection, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    const char* clsnames[] = { TYPE_Solid, OWL_Collection, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
     std::vector<GEOM::GeometricItem> shells;
     fd.indexPath.push_back(0);
@@ -205,14 +205,14 @@ GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, PerFace
 //
 GEOM::GeometricItem Geometry::ConvertCompositeSurface(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_CompositeSurface, boundaries, fd);
+    return ConvertSurfaceSet(TYPE_CompositeSurface, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
 GEOM::GeometricItem Geometry::ConvertMultiSurface(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    return ConvertSurfaceSet(OWL_CityJsonPrefix TYPE_MultiSurface, boundaries, fd);
+    return ConvertSurfaceSet(TYPE_MultiSurface, boundaries, fd);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -237,7 +237,7 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
     }
 
     const char* clsnames[] = { className , OWL_Collection, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
     GEOM::Collection multiSurface = CreateInstance(cls);
     multiSurface.set_objects(items.data(), items.size());
@@ -429,8 +429,8 @@ int64_t Geometry::AddTextureVertex(int jind, DoubleArray& coordinates)
 //
 GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
 {
-    const char* clsnames[] = { OWL_CityJsonPrefix  "Surface", OWL_BoundaryRepresentation, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    const char* clsnames[] = { OWL_ClsSurface, OWL_BoundaryRepresentation, NULL };
+    auto cls = m_cityModel.GetOrCreateClass(clsnames, false);
 
     GEOM::BoundaryRepresentation face = CreateInstance(cls);
     face.set_vertices(group.coordinates.data(), group.coordinates.size());
@@ -443,7 +443,7 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
 
     auto semantic = group.key.semantic;
     if (semantic) {
-        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OBJECTPROPERTY_TYPE, OWL_SurfaceSemantic);
+        auto prop = m_cityModel.GetOrCreateProperty(cls, MEMBER_SEMANTICS, OWL_CityJsonPrefix, OBJECTPROPERTY_TYPE, OWL_ClsSurfaceSemantic);
         SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 
@@ -566,8 +566,8 @@ GEOM::GeometricItem Geometry::ConvertGeometryInstance(rapidjson::Value& boundari
     T.set__33(t[10]);
     T.set__43(t[11]);
 
-    const char* clsnames[] = { OWL_CityJsonPrefix  TYPE_GeometryInstance, OWL_Transformation, NULL};
-    auto cls = m_cityModel.GetOrCreateClass(clsnames);
+    const char* clsnames[] = { TYPE_GeometryInstance, OWL_Transformation, NULL};
+    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
     
     GEOM::Transformation trans = CreateInstance(cls);
     trans.set_object(tpl.item);
