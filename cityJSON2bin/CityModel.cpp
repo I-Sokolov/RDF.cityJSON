@@ -311,7 +311,7 @@ OwlClass CityModel::GetOrCreateClass(const char* names[], bool addPrefix)
     auto cls = GetClassByName(m_owlModel, name);
     
     if (!cls) {
-        cls = CreateClass(m_owlModel, names[0]);
+        cls = CreateClass(m_owlModel, name);
 
         auto parent = GetOrCreateClass(names + 1, false);
         if (parent) {
