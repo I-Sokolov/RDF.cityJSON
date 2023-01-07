@@ -96,6 +96,7 @@ void CityModel::ConvertCityJSONObject()
     rapidjson::Value    transform;
     rapidjson::Value    cityObjects;
     rapidjson::Value    metadata;
+    rapidjson::Value    extensions;
 
     for (auto& member : m_cityDOM.GetObject()) {
         auto memberName = member.name.GetString();
@@ -122,6 +123,9 @@ void CityModel::ConvertCityJSONObject()
         }
         else if (!strcmp(memberName, MEMBER_METADATA)) {
             metadata = member.value;
+        }
+        else if (!strcmp(memberName, MEMBER_EXTENSIONS)) {
+            extensions = member.value;
         }
         else {
             LOG_CNV("Unsupported cityJSON member", memberName);
