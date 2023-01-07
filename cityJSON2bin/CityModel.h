@@ -36,7 +36,7 @@ private:
     void SaveBinFile(const char* rdfFilePath);
 
     void CreateBaseClasses();
-    void SetProperty(OwlInstance instance, const char* propName, OwlInstances& value);
+    void AddNestedObjects(OwlInstance instance, const char* propName, OwlInstances& value);
     OwlInstance ConvertAttributeObject(const char* name, rapidjson::Value& value);
 
     void ConvertCityJSONObject();

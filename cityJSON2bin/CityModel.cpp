@@ -75,7 +75,7 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 //
 void CityModel::CreateBaseClasses()
 {
-    const char* clsnameGenericObject[] = { OWL_ClsCityJSONGenericObject, NULL };    
+    const char* clsnameGenericObject[] = { OWL_ClsCityJSONGenericObject, "Collection", NULL};
     auto clsGenericObject = GetOrCreateClass(clsnameGenericObject, false);
     
     GetOrCreateProperty(clsGenericObject, OWL_PropRepresentation, NULL, OBJECTPROPERTY_TYPE, OWL_GeometricItem, 0, -1);
@@ -167,7 +167,7 @@ void CityModel::ConvertCityJSONObject()
 
     //
     //
-    SetProperty(city, OWL_PropChildren, owlObjects);
+    AddNestedObjects(city, OWL_PropChildren, owlObjects);
 
     CreateAttribute(city, MEMBER_TRANSFORM, OWL_PropCityJsonPrefix, transform);
     CreateAttribute(city, MEMBER_METADATA, OWL_PropCityJsonPrefix, metadata);
@@ -175,7 +175,7 @@ void CityModel::ConvertCityJSONObject()
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityModel::SetProperty(OwlInstance instance, const char* propName, OwlInstances& value)
+void CityModel::AddNestedObjects(OwlInstance instance, const char* propName, OwlInstances& value)
 {
     auto prop = GetPropertyByName(m_owlModel, propName);
     if (!prop) {
@@ -191,6 +191,11 @@ void CityModel::SetProperty(OwlInstance instance, const char* propName, OwlInsta
     }
 
     SetObjectTypeProperty(instance, prop, value.data(), value.size());
+
+    //tempotrary hack to include in collection
+    if (strcmp(propName, "objects")) {
+        AddNestedObjects(instance, "objects", value);
+    }
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -225,7 +230,7 @@ void CityModel::SetupChildren(CityObjects& objects, OwlInstances& topLevel)
             }
 
             if (!owlChildren.empty()) {
-                SetProperty(object.second.owlObject, OWL_PropChildren, owlChildren);
+                AddNestedObjects(object.second.owlObject, OWL_PropChildren, owlChildren);
             }
 
             if (object.second.parents.empty()) {
@@ -284,7 +289,7 @@ void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapi
     OwlInstance instance = CreateInstance(cls, id.GetString());
     object.owlObject = instance;
 
-    SetProperty(instance, OWL_PropRepresentation, geomItems);
+    AddNestedObjects(instance, OWL_PropRepresentation, geomItems);
 
     if (!attributes.IsNull()) {
         for (auto& attr : attributes.GetObject()) {
