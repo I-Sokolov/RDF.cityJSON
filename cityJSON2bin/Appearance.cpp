@@ -25,13 +25,19 @@ void Appearance::SetCityAppearance(rapidjson::Value& appearance)
             SetCityMaterials(it->value);
         }
         else if (!strcmp(name, MEMBER_TEXTURES)) {
+#ifndef IGNORE_TEXTURE
             SetCityTextures(it->value);
+#endif
         }
         else if (!strcmp(name, MEMBER_TXT_VERTICES)) {
+#ifndef IGNORE_TEXTURE
             SetCityVerticiesTextures(it->value);
+#endif
         }
         else if (!strcmp(name, MEMBER_DEF_TXT_THEME)) {
+#ifndef IGNORE_TEXTURE
             m_defaultThemeTexture = it->value.GetString();
+#endif
         }
         else if (!strcmp(name, MEMBER_DEF_MAT_THEME)) {
             m_defaultThemeMaterial = it->value.GetString();

@@ -69,7 +69,9 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
                 fd.material = it->value;
             }
             else if (!strcmp(memberName, MEMBER_TEXTURE)) {
+#ifndef IGNORE_TEXTURE
                 fd.texture = it->value;
+#endif
             }
             else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
                 jtemplate = it->value;
