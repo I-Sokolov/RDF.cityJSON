@@ -199,6 +199,26 @@ void CityModel::AddNestedObjects(OwlInstance instance, const char* propName, Owl
 
 //-----------------------------------------------------------------------------------------------
 //
+#ifdef DELETE_EMPTY_OBJECTS
+static bool HasRepresentation(OwlInstance instance)
+{
+    auto model = GetModel(instance);
+    auto prop = GetPropertyByName(model, OWL_PropRepresentation);
+    if (!prop) {
+        assert(prop);
+        return false; //>>>>>>
+    }
+
+    int64_t* r = NULL;
+    int64_t n = 0;
+    GetObjectProperty(instance, prop, &r, &n);
+
+    return n > 0;
+}
+#endif
+
+//-----------------------------------------------------------------------------------------------
+//
 void CityModel::SetupChildren(CityObjects& objects, OwlInstances& topLevel)
 {
     // complete parent-children
@@ -219,6 +239,14 @@ void CityModel::SetupChildren(CityObjects& objects, OwlInstances& topLevel)
     //
     for (auto& object : objects) {
         if (object.second.owlObject) {
+
+#ifdef DELETE_EMPTY_OBJECTS
+            if (object.second.children.empty() && !HasRepresentation(object.second.owlObject)) {
+                RemoveInstance(object.second.owlObject);
+                object.second.owlObject = NULL;
+                continue;
+            }
+#endif
 
             OwlInstances owlChildren;
             for (auto& childId : object.second.children) {
