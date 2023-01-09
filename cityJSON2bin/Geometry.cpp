@@ -263,6 +263,12 @@ void Geometry::AddFaceToGroups(FaceGroups& fgroups, rapidjson::Value& boundaries
     std::swap(key.textures, app.textures);
     key.semantic = fd.semantics.GetSurfaceSemantic(fd.indexPath);
 
+#ifdef ONLY_SURFACE_SEMANTIC
+    if (!key.semantic) {
+        return;
+    }
+#endif
+
     FaceGroup& group = GetOrCreateGroup(fgroups, key);
 
     auto texVertIndecies = m_cityModel.GetAppearance().GetTextuteIndecies(group.key.textures, app.textureIndecies);
