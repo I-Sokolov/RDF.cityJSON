@@ -75,7 +75,7 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 //
 void CityModel::CreateBaseClasses()
 {
-    const char* clsnameGenericObject[] = { OWL_ClsCityJSONGenericObject, "Collection", NULL};
+    const char* clsnameGenericObject[] = { OWL_ClsCityJSONGenericObject, NULL};
     auto clsGenericObject = GetOrCreateClass(clsnameGenericObject, false);
     
     GetOrCreateProperty(clsGenericObject, OWL_PropRepresentation, NULL, OBJECTPROPERTY_TYPE, OWL_GeometricItem, 0, -1);
@@ -189,17 +189,12 @@ void CityModel::AddNestedObjects(OwlInstance instance, const char* propName, Owl
 
     int64_t* rold = NULL;
     int64_t nold = 0;
-    GetObjectTypeProperty(instance, prop, &rold, &nold);
+    GetObjectProperty(instance, prop, &rold, &nold);
     for (int64_t i = 0; i < nold; i++) {
         value.push_back(rold[i]);
     }
 
     SetObjectTypeProperty(instance, prop, value.data(), value.size());
-
-    //tempotrary hack to include in collection
-    if (strcmp(propName, "objects")) {
-        AddNestedObjects(instance, "objects", value);
-    }
 }
 
 //-----------------------------------------------------------------------------------------------
