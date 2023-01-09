@@ -238,6 +238,10 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
         }
     }
 
+    if (items.empty()) {
+        return NULL;
+    }
+
     const char* clsnames[] = { className , OWL_ClsGeomItem, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
 
