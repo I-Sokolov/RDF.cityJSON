@@ -1,8 +1,8 @@
 // IMPLEMENTATION DECLARATIONS
 #pragma once
 
-#include "cityJson2bin.h"
-using namespace cityJson2bin;
+#include "CityJsonRDF.h"
+using namespace CityJsonRDF;
 #include "Geometry.h"
 #include "Appearance.h"
 
@@ -12,7 +12,7 @@ public:
     struct Exception {};
 
 public:
-    CityModel(cityJson2bin::IProgress* pProgress, cityJson2bin::ILog* pLog);
+    CityModel(CityJsonRDF::IProgress* pProgress, CityJsonRDF::ILog* pLog);
     ~CityModel();
 
 public:
@@ -54,8 +54,8 @@ private:
     void SetupChildren(CityObjects& objects, OwlInstances& topLevel);
 
 private:
-    cityJson2bin::IProgress* m_pProgress;
-    cityJson2bin::ILog*      m_pLog;
+    CityJsonRDF::IProgress* m_pProgress;
+    CityJsonRDF::ILog*      m_pLog;
 
     OwlModel                m_owlModel;
     rapidjson::Document     m_cityDOM;

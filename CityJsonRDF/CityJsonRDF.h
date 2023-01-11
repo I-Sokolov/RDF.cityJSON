@@ -6,17 +6,17 @@
 //
 
 
-#ifndef CITYJSON2BIN_EXTERN
-    #ifdef CITYJSON2BIN_BUILD_DLL_INTERNAL
-        #define CITYJSON2BIN_EXPORT __declspec(dllexport)
-    #elif CITYJSON2BIN_USE_DLL
-        #define CITYJSON2BIN_EXPORT __declspec(dllimport)
+#ifndef CITYJSONRDF_EXTERN
+    #ifdef CITYJSONRDF_BUILD_DLL_INTERNAL
+        #define CITYJSONRDF_EXPORT __declspec(dllexport)
+    #elif CITYJSONRDF_USE_DLL
+        #define CITYJSONRDF_EXPORT __declspec(dllimport)
     #else
-        #define CITYJSON2BIN_EXPORT /**/
+        #define CITYJSONRDF_EXPORT /**/
     #endif
 #endif
 
-namespace cityJson2bin
+namespace CityJsonRDF
 {
     /// <summary>
     /// 
@@ -40,10 +40,10 @@ namespace cityJson2bin
     /// <summary>
     /// 
     /// </summary>
-    extern CITYJSON2BIN_EXPORT OwlModel Open(
+    extern CITYJSONRDF_EXPORT OwlModel Open(
         const char* filePathCityJson,
-        IProgress* pProgress = NULL,
-        ILog* pLog = NULL
+        IProgress*  pProgress = NULL,
+        ILog*       pLog = NULL
     );
 
 }

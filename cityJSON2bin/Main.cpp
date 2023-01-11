@@ -5,7 +5,7 @@
 #include <set>
 
 #include "engine.h"
-#include "cityJson2bin.h"
+#include "CityJsonRDF.h"
 
 //-----------------------------------------------------------------------------------------------
 //
@@ -25,7 +25,7 @@ static void SaveBinFile(OwlModel model, const char* rdfFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-struct Progress : public cityJson2bin::IProgress
+struct Progress : public CityJsonRDF::IProgress
 {
     virtual void Start(int range) override
     {
@@ -56,7 +56,7 @@ private:
 
 //-----------------------------------------------------------------------------------------------
 //
-struct Log : public cityJson2bin::ILog
+struct Log : public CityJsonRDF::ILog
 {
     virtual void Message(Level level, const char* category, const char* msg, const char* converterState) override
     {
@@ -66,9 +66,9 @@ struct Log : public cityJson2bin::ILog
 
         const char* lev = "UNKNOWN LEVER";
         switch (level) {
-            case cityJson2bin::ILog::Level::Error: lev = "ERROR"; break;
-            case cityJson2bin::ILog::Level::Warning: lev = "WARING"; break;
-            case cityJson2bin::ILog::Level::Info: lev = "INFO"; break;
+            case CityJsonRDF::ILog::Level::Error: lev = "ERROR"; break;
+            case CityJsonRDF::ILog::Level::Warning: lev = "WARING"; break;
+            case CityJsonRDF::ILog::Level::Info: lev = "INFO"; break;
         }
 
         printf("++ LOG %s: %s (for %s)\n", lev, msg, converterState);
@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
     Progress progress;
     Log log;
 
-    auto model = cityJson2bin::Open(argv[1], &progress, &log);
+    auto model = CityJsonRDF::Open(argv[1], &progress, &log);
     if (model) {
         SaveBinFile(model, argv[2]);
     }

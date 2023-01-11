@@ -2,7 +2,7 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "CityModel.h"
-#include "cityJson2bin.h"
+#include "CityJsonRDF.h"
 
 //-----------------------------------------------------------------------------------------------
 //
@@ -10,10 +10,10 @@ static CityModel* s_pModel = NULL;
 
 //-----------------------------------------------------------------------------------------------
 //
-extern CITYJSON2BIN_EXPORT OwlModel cityJson2bin::Open(
-    const char*               filePathCityJson,
-    cityJson2bin::IProgress*  pProgress,
-    cityJson2bin::ILog*       pLog
+extern CITYJSONRDF_EXPORT OwlModel CityJsonRDF::Open(
+    const char*                 filePathCityJson,
+    CityJsonRDF::IProgress*     pProgress,
+    CityJsonRDF::ILog*          pLog
 )
 {
     if (s_pModel) {

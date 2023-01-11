@@ -2,13 +2,13 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "Geometry.h"
-#include "cityJson2bin.h"
-using namespace cityJson2bin;
+#include "CityJsonRDF.h"
+using namespace CityJsonRDF;
 #include "CityModel.h"
 
 //---------------------------------------------------------------------------------
 //
-CityModel::CityModel(cityJson2bin::IProgress* pProgress, cityJson2bin::ILog* pLog)
+CityModel::CityModel(CityJsonRDF::IProgress* pProgress, CityJsonRDF::ILog* pLog)
     : m_geometry(*this)
     , m_appearance(*this)
     , m_pProgress (pProgress)

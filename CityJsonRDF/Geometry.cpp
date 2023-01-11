@@ -1,6 +1,6 @@
 #include "pch.h"
-#include "cityJson2bin.h"
-using namespace cityJson2bin;
+#include "CityJsonRDF.h"
+using namespace CityJsonRDF;
 #include "CommonDefs.h"
 #include "CityModel.h"
 #include "Appearance.h"

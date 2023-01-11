@@ -28,6 +28,6 @@ extern void JsonAssertionError(const char* assertion, const char* file, int line
 
 #include <geom.h>
 
-#define CITYJSON2BIN_BUILD_DLL_INTERNAL
+#define CITYJSONRDF_BUILD_DLL_INTERNAL
 
 #endif //PCH_H
