@@ -42,9 +42,9 @@ typedef		int64_t								OwlModel;
 typedef		int64_t								OwlClass;
 typedef		int64_t								OwlInstance;
 typedef		int64_t								RdfProperty;
-typedef     int64_t								RdfPropertyType;
 typedef		RdfProperty							OwlDatatypeProperty;
 typedef		RdfProperty							OwlObjectProperty;
+typedef		int64_t								RdfPropertyType;
 typedef		int64_t								ConceptualFace;
 
 #define		OBJECTPROPERTY_TYPE					1
@@ -2205,7 +2205,7 @@ static	inline	wchar_t	* GetNameOfPropertyWEx(
 //
 //		SetPropertyType                             (http://rdf.bg/gkdoc/CP64/SetPropertyType.html)
 //				RdfProperty				rdfProperty							IN
-//				int64_t					propertyType						IN
+//				RdfPropertyType			propertyType						IN
 //
 //				int64_t					returns								OUT
 //
@@ -2213,16 +2213,16 @@ static	inline	wchar_t	* GetNameOfPropertyWEx(
 //	if the type of the property was not set before.
 //
 //	The following values are possible for propertyType:
-//			1	The property is an Object Property
-//			2	The property is an Datatype Property of type Boolean
-//			3	The property is an Datatype Property of type Char
-//			4	The property is an Datatype Property of type Integer
-//			5	The property is an Datatype Property of type Double
+//			OBJECTPROPERTY_TYPE				The property is an Object Property
+//			DATATYPEPROPERTY_TYPE_BOOLEAN	The property is an Datatype Property of type Boolean
+//			DATATYPEPROPERTY_TYPE_CHAR		The property is an Datatype Property of type Char
+//			DATATYPEPROPERTY_TYPE_INTEGER	The property is an Datatype Property of type Integer
+//			DATATYPEPROPERTY_TYPE_DOUBLE	The property is an Datatype Property of type Double
 //	The return value of this call is GetPropertyType/Ex applied after applying
 //	the type, normally this corresponds with the propertyType requested
 //	to be set unless the property already has a different propertyType set before.
 //
-RdfPropertyType		DECL STDC	SetPropertyType(
+int64_t		DECL STDC	SetPropertyType(
 									RdfProperty				rdfProperty,
 									RdfPropertyType			propertyType
 								);
@@ -2231,7 +2231,7 @@ RdfPropertyType		DECL STDC	SetPropertyType(
 //		SetPropertyTypeEx                           (http://rdf.bg/gkdoc/CP64/SetPropertyTypeEx.html)
 //				OwlModel				model								IN
 //				RdfProperty				rdfProperty							IN
-//				int64_t					propertyType						IN
+//				RdfPropertyType			propertyType						IN
 //
 //				int64_t					returns								OUT
 //
@@ -2239,25 +2239,25 @@ RdfPropertyType		DECL STDC	SetPropertyType(
 int64_t		DECL STDC	SetPropertyTypeEx(
 									OwlModel				model,
 									RdfProperty				rdfProperty,
-									int64_t					propertyType
+									RdfPropertyType			propertyType
 								);
 
 //
 //		GetPropertyType                             (http://rdf.bg/gkdoc/CP64/GetPropertyType.html)
 //				RdfProperty				rdfProperty							IN
 //
-//				int64_t					returns								OUT
+//				RdfPropertyType			returns								OUT
 //
 //	This function returns the type of the property.
 //	The following return values are possible:
-//		0	The property is not defined yet
-//		1	The property is an Object Type Property
-//		2	The property is an Data Type Property of type Boolean
-//		3	The property is an Data Type Property of type Char
-//		4	The property is an Data Type Property of type Integer
-//		5	The property is an Data Type Property of type Double
+//		0								The property is not defined yet
+//		OBJECTPROPERTY_TYPE				The property is an Object Property
+//		DATATYPEPROPERTY_TYPE_BOOLEAN	The property is an Datatype Property of type Boolean
+//		DATATYPEPROPERTY_TYPE_CHAR		The property is an Datatype Property of type Char
+//		DATATYPEPROPERTY_TYPE_INTEGER	The property is an Datatype Property of type Integer
+//		DATATYPEPROPERTY_TYPE_DOUBLE	The property is an Datatype Property of type Double
 //
-int64_t		DECL STDC	GetPropertyType(
+RdfPropertyType		DECL STDC	GetPropertyType(
 									RdfProperty				rdfProperty
 								);
 
@@ -2266,12 +2266,12 @@ int64_t		DECL STDC	GetPropertyType(
 //				OwlModel				model								IN
 //				RdfProperty				rdfProperty							IN
 //
-//				int64_t					returns								OUT
+//				RdfPropertyType			returns								OUT
 //
 //	This call has the same behavior as GetPropertyType, however needs to be
 //	used in case properties are exchanged as a successive series of integers.
 //
-int64_t		DECL STDC	GetPropertyTypeEx(
+RdfPropertyType		DECL STDC	GetPropertyTypeEx(
 									OwlModel				model,
 									RdfProperty				rdfProperty
 								);
@@ -2577,6 +2577,26 @@ OwlClass	DECL STDC	GetInstanceClass(
 //
 //
 OwlClass	DECL STDC	GetInstanceClassEx(
+									OwlModel				model,
+									OwlInstance				owlInstance
+								);
+
+OwlClass	DECL STDC	GetInstanceClassByIterator(
+									OwlInstance				owlInstance,
+									OwlClass				owlClass
+								);
+
+OwlClass	DECL STDC	GetInstanceClassByIteratorEx(
+									OwlModel				model,
+									OwlInstance				owlInstance,
+									OwlClass				owlClass
+								);
+
+OwlClass	DECL STDC	GetInstanceGeometryClass(
+									OwlInstance				owlInstance
+								);
+
+OwlClass	DECL STDC	GetInstanceGeometryClassEx(
 									OwlModel				model,
 									OwlInstance				owlInstance
 								);
@@ -4893,7 +4913,7 @@ static	inline	void	SetColor(
 				owlInstanceColor,
 				GetPropertyByName(
 						GetModel(owlInstanceColor),
-						(char*) "ambient"
+						"ambient"
 					),
 				&values,
 				&card
@@ -4918,7 +4938,7 @@ static	inline	void	SetColor(
 				owlInstanceColor,
 				GetPropertyByName(
 						GetModel(owlInstanceColor),
-						(char*) "diffuse"
+						"diffuse"
 					),
 				&values,
 				&card
@@ -4943,7 +4963,7 @@ static	inline	void	SetColor(
 				owlInstanceColor,
 				GetPropertyByName(
 						GetModel(owlInstanceColor),
-						(char*) "emissive"
+						"emissive"
 					),
 				&values,
 				&card
@@ -4968,7 +4988,7 @@ static	inline	void	SetColor(
 				owlInstanceColor,
 				GetPropertyByName(
 						GetModel(owlInstanceColor),
-						(char*) "specular"
+						"specular"
 					),
 				&values,
 				&card
@@ -5005,7 +5025,7 @@ static	inline	void	GetMaterialColor(
 			owlInstanceMaterial,
 			GetPropertyByName(
 					GetModel(owlInstanceMaterial),
-					(char*) "color"
+					"color"
 				),
 			&values,
 			&card
@@ -5050,7 +5070,7 @@ static	inline	void	SetMaterialColor(
 			owlInstanceMaterial,
 			GetPropertyByName(
 					GetModel(owlInstanceMaterial),
-					(char*) "color"
+					"color"
 				),
 			&values,
 			&card
