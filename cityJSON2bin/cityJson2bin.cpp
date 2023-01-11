@@ -6,53 +6,49 @@
 
 //-----------------------------------------------------------------------------------------------
 //
-extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
-    const char* filePathCityJson,
-    const char* filePathBin
+static CityModel* s_pModel = NULL;
+
+//-----------------------------------------------------------------------------------------------
+//
+extern CITYJSON2BIN_EXPORT OwlModel cityJson2bin::Open(
+    const char*               filePathCityJson,
+    cityJson2bin::IProgress*  pProgress,
+    cityJson2bin::ILog*       pLog
 )
 {
-    cityJson2bin_error error;
-
-    try {
-        CityModel city;
-        city.Convert(filePathCityJson, filePathBin);
-    }
-    catch (cityJson2bin_error expt) {
-        error = expt;
+    if (s_pModel) {
+        if (pLog) {
+            pLog->Message(ILog::Level::Error, "Another model is opening now", "Another model is opening now", "<not initialized");
+        }
+        return NULL;
     }
 
-    return error;
-}
+    s_pModel = new CityModel (pProgress, pLog);
 
-//---------------------------------------------------------------------------------
-//
-
-extern void JsonAssertionError (const char* assertion, const char* file, int line)
-{
-    char msg[512];
-    snprintf(msg, 511, "JSON assertion '%s' failed at file %s line %d\n", assertion, file, line);
-    THROW_ERROR(msg);
-}
-
-//---------------------------------------------------------------------------------
-//
-
-extern void THROW_ERROR(const char* error_code) 
-{ 
-    throw cityJson2bin_error(error_code); 
-}
-
-//---------------------------------------------------------------------------------
-//
-
-extern void LOG_CNV(const char* catergory, const char* msg)
-{
-    char m[512];
-    snprintf(m, 511, "%s: %s", catergory, msg);
+    OwlModel model = NULL;
     
-    static std::set<std::string> shown;
+    try {
+        model = s_pModel->Open(filePathCityJson);
+    }
+    catch (CityModel::Exception) {
+        s_pModel->LogMessage(ILog::Level::Error, "Failed to open model");
+    }
 
-    if (shown.insert(m).second) {
-        printf("%s\n", m);
+    delete s_pModel;
+    s_pModel = NULL;
+
+    return model;
+}
+
+//---------------------------------------------------------------------------------
+//
+
+void JsonAssertionError(const char* assertion, const char* file, int line)
+{
+    assert(s_pModel);
+    if (s_pModel) {
+        s_pModel->ThrowError("Unexcepted JSON data: '%s' (failed at file %s line %d)", assertion, file, line);
     }
 }
+
+

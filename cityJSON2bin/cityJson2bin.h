@@ -7,32 +7,43 @@
 
 
 #ifndef CITYJSON2BIN_EXTERN
-    #ifdef _MSC_VER
-        #ifdef CITYJSON2BIN_BUILD
-            #define CITYJSON2BIN_EXPORT __declspec(dllexport)
-        #else
-            #define CITYJSON2BIN_EXPORT __declspec(dllimport)
-        #endif // CITYJSON2BIN_BUILD
+    #ifdef CITYJSON2BIN_BUILD_DLL_INTERNAL
+        #define CITYJSON2BIN_EXPORT __declspec(dllexport)
+    #elif CITYJSON2BIN_USE_DLL
+        #define CITYJSON2BIN_EXPORT __declspec(dllimport)
     #else
         #define CITYJSON2BIN_EXPORT /**/
     #endif
 #endif
 
+namespace cityJson2bin
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    struct IProgress
+    {
+        virtual void Start(int range) = NULL;
+        virtual void Step() = NULL;
+        virtual void Finish() = NULL;
+    };
 
-/// <summary>
-/// 
-/// </summary>
-typedef std::string cityJson2bin_error;
+    /// <summary>
+    /// 
+    /// </summary>
+    struct ILog
+    {
+        enum class Level { Error, Warning, Info };
+        virtual void Message(Level level, const char* category, const char* msg, const char* converterState) = NULL;
+    };
 
+    /// <summary>
+    /// 
+    /// </summary>
+    extern CITYJSON2BIN_EXPORT OwlModel Open(
+        const char* filePathCityJson,
+        IProgress* pProgress = NULL,
+        ILog* pLog = NULL
+    );
 
-/// <summary>
-/// 
-/// </summary>
-/// <param name="filePathCityJson"></param>
-/// <param name="filePathBin"></param>
-/// <returns></returns>
-extern CITYJSON2BIN_EXPORT cityJson2bin_error cityJson2bin_Convert(
-    const char* filePathCityJson,
-    const char* filePathBin    
-);
-
+}

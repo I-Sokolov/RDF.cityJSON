@@ -57,7 +57,7 @@ void Semantics::Init(rapidjson::Value& semantics)
             m_values = member.value;
         }
         else {
-            LOG_CNV("Unsupported semantics member", memberName);
+            m_cityModel.LogMessage(ILog::Level::Info, "Unsupported semantics member '%s'", memberName);
         }
     }
 
@@ -69,7 +69,7 @@ void Semantics::Init(rapidjson::Value& semantics)
         for (auto iChild : parent.children) {
             auto& child = m_surfaces[iChild];            
             if (child.parent >= 0 && child.parent != iParent) {
-                LOG_CNV("Invalid semantic surface parent", child.type.GetString());
+                m_cityModel.LogMessage(ILog::Level::Error, "Invalid semantic surface '%s' parent", child.type.GetString());
             }
             child.parent = iParent;
         }
@@ -95,7 +95,7 @@ OwlInstance Semantics::GetSurfaceSemantic(UIntList faceIndexPath)
 
     int i = values->GetInt();
     if (i < 0 || i >= m_surfaces.size()) {
-        LOG_CNV("Semantic surface index is out of range","");
+        m_cityModel.LogMessage(ILog::Level::Error, "Semantic surface index %d is out of range", i);
         return 0;
     }
 

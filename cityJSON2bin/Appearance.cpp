@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "CommonDefs.h"
 #include "CityModel.h"
-#include "cityJson2bin.h"
 #include "Appearance.h"
 
 
@@ -43,7 +42,7 @@ void Appearance::SetCityAppearance(rapidjson::Value& appearance)
             m_defaultThemeMaterial = it->value.GetString();
         }
         else {
-            TRACE_CNV("Unknown appearance member: %s\n", name);
+            m_cityModel.LogMessage(ILog::Level::Info, "Unknown appearance member: '%s'", name);
         }
     }
 }
@@ -166,7 +165,7 @@ void Appearance::GetSurfaceAppearance(SurfaceAppearance& appearance, rapidjson::
                                     texInd = ri[i].GetInt();
                                 }
                                 else if (texInd != ri[i].GetInt()) {
-                                    LOG_CNV("texture for opening is differ from texture for outer", "");
+                                    m_cityModel.LogMessage(ILog::Level::Warning, "texture for hole loop is different from texture for outer loop");
                                 }
                             }
                             else {
@@ -219,7 +218,7 @@ int Appearance::GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, siz
         }
 
         if (ind >= 0 && ind >= maxInd) {
-            LOG_CNV("Material or texture index is out of range", "");
+            m_cityModel.LogMessage(ILog::Level::Error, "Material or texture index is out of range");
             ind = -1;
         }
     }
@@ -262,7 +261,7 @@ ListOfListOfInt* Appearance::GetTextuteIndecies(Theme2Index& textures, Theme2Tex
             return &(it->second);
         }
         else {
-            LOG_CNV("Theme is misses in texture indecies", theme);
+            m_cityModel.LogMessage(ILog::Level::Error, "Theme '%s' is misses in texture indecies", theme);
         }
     }
     return nullptr;
@@ -288,7 +287,7 @@ rapidjson::Value* Appearance::FindValueByIndexPath(rapidjson::Value& jnode, UInt
         return values;
     }
 
-    LOG_CNV("Missed appearance value", "neither values nor value");
+    m_cityModel.LogMessage(ILog::Level::Error, "Missed appearance value or values");
     return nullptr;
 }
 

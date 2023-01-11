@@ -86,7 +86,7 @@ private:
 
     void UseTemplateVerticies(bool use) { m_bUseTemplateVerticies = use; }
 
-    GEOM::GeometricItem ConvertFace(rapidjson::Value& jloops, PerFaceData& fd);
+    //GEOM::GeometricItem ConvertFace(rapidjson::Value& jloops, PerFaceData& fd);
     //GEOM::Curve ConvertCurve(rapidjson::Value& jloop);
 
     GEOM::GeometricItem ConvertGeometryInstance(rapidjson::Value& boundaries, rapidjson::Value& jtemplate, rapidjson::Value& jtransformation);

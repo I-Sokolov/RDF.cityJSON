@@ -1,17 +1,22 @@
 // IMPLEMENTATION DECLARATIONS
 #pragma once
 
+#include "cityJson2bin.h"
+using namespace cityJson2bin;
 #include "Geometry.h"
 #include "Appearance.h"
 
 class CityModel
 {
 public:
-    CityModel();
+    struct Exception {};
+
+public:
+    CityModel(cityJson2bin::IProgress* pProgress, cityJson2bin::ILog* pLog);
     ~CityModel();
 
 public:
-    void Convert(const char* cityFilePath, const char* rdfFilePath);
+    OwlModel Open(const char* cityFilePath);
 
 public:
     OwlModel RdfModel() { return m_owlModel; }    
@@ -21,6 +26,10 @@ public:
 
     Appearance& GetAppearance() { return m_appearance; }
     Geometry& GetGeometry() { return m_geometry; }
+
+public:
+    void ThrowError(const char* fmt, ...);
+    void LogMessage(ILog::Level level, const char* fmt, ...);
 
 private:
     struct CityObject {
@@ -33,7 +42,6 @@ private:
 
 private:
     void ReadCityFile(const char* cityFilePath);
-    void SaveBinFile(const char* rdfFilePath);
 
     void CreateBaseClasses();
     void AddNestedObjects(OwlInstance instance, const char* propName, OwlInstances& value);
@@ -43,10 +51,13 @@ private:
     void ConvertCityObject(CityObject& object, rapidjson::Value& id, rapidjson::Value& jobject);
     void SetupChildren(CityObjects& objects, OwlInstances& topLevel);
 
-
 private:
+    cityJson2bin::IProgress* m_pProgress;
+    cityJson2bin::ILog*      m_pLog;
+
     OwlModel                m_owlModel;
     rapidjson::Document     m_cityDOM;
+    ConverterState          m_converterState;
 
     Geometry                m_geometry;
     Appearance              m_appearance;

@@ -11,6 +11,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include <list>
 #include <vector>
@@ -27,6 +28,6 @@ extern void JsonAssertionError(const char* assertion, const char* file, int line
 
 #include <geom.h>
 
-#define CITYJSON2BIN_BUILD
+#define CITYJSON2BIN_BUILD_DLL_INTERNAL
 
 #endif //PCH_H

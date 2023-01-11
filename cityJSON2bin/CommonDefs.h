@@ -95,10 +95,8 @@ typedef std::vector<OwlInstance>    OwlInstances;
 
 //====================================================================
 
-extern void LOG_CNV(const char* catergory, const char* msg);
-
-//====================================================================
-
-extern void THROW_ERROR(const char* error_code);
-
+struct ConverterState
+{
+    std::string ToString() { return "TODO"; }
+};
 

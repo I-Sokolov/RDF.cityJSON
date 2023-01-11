@@ -3,13 +3,16 @@
 #include "CommonDefs.h"
 #include "Geometry.h"
 #include "cityJson2bin.h"
+using namespace cityJson2bin;
 #include "CityModel.h"
 
 //---------------------------------------------------------------------------------
 //
-CityModel::CityModel()
+CityModel::CityModel(cityJson2bin::IProgress* pProgress, cityJson2bin::ILog* pLog)
     : m_geometry(*this)
     , m_appearance(*this)
+    , m_pProgress (pProgress)
+    , m_pLog (pLog)
 {
     m_owlModel = CreateModel();
 }
@@ -18,13 +21,16 @@ CityModel::CityModel()
 //
 CityModel::~CityModel()
 {
-    CloseModel(m_owlModel);
+    if (m_owlModel) {
+        CloseModel(m_owlModel);
+        m_owlModel = NULL;
+    }
 }
 
 
 //---------------------------------------------------------------------------------
 //
-void CityModel::Convert(const char* cityFilePath, const char* rdfFilePath)
+OwlModel CityModel::Open(const char* cityFilePath)
 {
     ReadCityFile(cityFilePath);
 
@@ -32,22 +38,43 @@ void CityModel::Convert(const char* cityFilePath, const char* rdfFilePath)
 
     ConvertCityJSONObject();
 
-    SaveBinFile(rdfFilePath);    
+    auto ret = m_owlModel;
+    m_owlModel = NULL;
+    
+    return ret;
 }
 
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityModel::SaveBinFile(const char* rdfFilePath)
+void CityModel::ThrowError(const char* fmt, ...)
 {
-    auto fp = fopen(rdfFilePath, "w");
-    if (!fp)
-        THROW_ERROR("Filed to open output file");
-    fclose(fp);
+    char msg[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(msg, 511, fmt, args);
+    va_end(args);
 
-    auto res = SaveModel(m_owlModel, rdfFilePath);
-    if (res)
-        THROW_ERROR("Failed to write output file");
+    if (m_pLog) {
+        m_pLog->Message(ILog::Level::Error, fmt, msg, m_converterState.ToString().c_str());
+    }
+
+    throw Exception();
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+void CityModel::LogMessage(ILog::Level level, const char* fmt, ...)
+{
+    char msg[512];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(msg, 511, fmt, args);
+    va_end(args);
+
+    if (m_pLog) {
+        m_pLog->Message(level, fmt, msg, m_converterState.ToString().c_str());
+    }
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -61,7 +88,7 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 
     FILE* fpInput = fopen(cityFilePath, ReadMode);
     if (!fpInput)
-        THROW_ERROR("Failed to open input file");
+        ThrowError("Failed to open file %s", cityFilePath);
 
     static char readBuff[65536];
     rapidjson::FileReadStream rstream(fpInput, readBuff, sizeof(readBuff));
@@ -128,14 +155,15 @@ void CityModel::ConvertCityJSONObject()
             extensions = member.value;
         }
         else {
-            LOG_CNV("Unsupported cityJSON member", memberName);
+            LogMessage(ILog::Level::Info, "Unsupported CityJSON Object member: %s", memberName);
         }
     }
 
     if (!type || strcmp(type, TYPE_CityJSON))
-        THROW_ERROR("Expcected type CityJSON");
+        LogMessage(ILog::Level::Error, "Unexpected CityJSON Object type: '%s'", type?type:"(NULL)");
+
     if (!version || fabs(atof(version) - VERSION_1_1) > DBL_MIN)
-        THROW_ERROR("Unsupported version");
+        LogMessage(ILog::Level::Error, "Unsupported version: '%s'", version ? version : "(NULL)");
 
     //
     //
@@ -153,8 +181,8 @@ void CityModel::ConvertCityJSONObject()
             CityObject& object = objects[id.GetString()];
             ConvertCityObject(object, id, cityObject);
         }
-        catch (cityJson2bin_error err) {
-            LOG_CNV("Failed to convert city object", err.c_str());
+        catch (Exception) {
+            LogMessage(ILog::Level::Error, "Failed to convert city object");
         }
     }
 
@@ -298,7 +326,7 @@ void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapi
             }
         }
         else {
-            LOG_CNV("Unsupported city object member", memberName);
+            LogMessage(ILog::Level::Info, "Unsupported city object member '%s'", memberName);
         }
     }
 
@@ -384,7 +412,7 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, c
     if (prop) {
         auto ptype = GetPropertyType(prop);
         if (ptype != propType) {
-            LOG_CNV("Porperty exists but traits mismatches", fullPropName.c_str());
+            LogMessage(ILog::Level::Warning, "Porperty '%s' exists but type mismatches", fullPropName.c_str());
             prop = GetOrCreateProperty(cls, propName, NULL, propType, refCls, minCard, maxCard, attempt + 1);
         }
         else {
@@ -395,7 +423,7 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, c
                 SetClassPropertyCardinalityRestriction(cls, prop, minCard, maxCard);
             }
             else if (minC != minCard || maxC != maxCard) {
-                LOG_CNV("Porperty exists but cardinality mismatches", fullPropName.c_str());
+                LogMessage(ILog::Level::Warning, "Porperty '%s' exists but cardinality mismatches", fullPropName.c_str());
                 prop = GetOrCreateProperty(cls, propName, NULL, propType, refCls, minCard, maxCard, attempt + 1);
             }
 
@@ -495,13 +523,13 @@ void CityModel::CreateAttribute(OwlInstance instance, const char* name, const ch
                     }
 
                     default:
-                        LOG_CNV("Unsupported attribte array type", name);
+                        LogMessage(ILog::Level::Info, "Attribte '%s' array type is not implemented", name);
                 }
             }
             break;
         }//case rapidjson::kArrayType
 
         default:
-            LOG_CNV("Unsupported attribte type", name);
+            LogMessage(ILog::Level::Info, "Attribte '%s' type is not implemented", name);
     }
 }

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "cityJson2bin.h"
+using namespace cityJson2bin;
 #include "CommonDefs.h"
 #include "CityModel.h"
 #include "Appearance.h"
@@ -17,9 +18,14 @@ void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
         //if (strcmp(type, TYPE_GeometryInstance))
         //    continue;
 
-        auto item = ConvertItem(jitem);
-        if (item) {
-            items.push_back(item);
+        try {
+            auto item = ConvertItem(jitem);
+            if (item) {
+                items.push_back(item);
+            }
+        }
+        catch (CityModel::Exception) {
+            m_cityModel.LogMessage(ILog::Level::Error, "Failed to convert geometry item");
         }
     }
 /*
@@ -43,99 +49,93 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 {
     GEOM::GeometricItem item;
 
-    try {
-        //
-        //
-        const char* type = nullptr;
-        rapidjson::Value lod;
-        rapidjson::Value boundaries;
-        rapidjson::Value jtemplate;
-        rapidjson::Value jtransformation;
-        PerFaceData      fd (m_cityModel);
+    //
+    //
+    const char* type = nullptr;
+    rapidjson::Value lod;
+    rapidjson::Value boundaries;
+    rapidjson::Value jtemplate;
+    rapidjson::Value jtransformation;
+    PerFaceData      fd(m_cityModel);
 
-        for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
-            const char* memberName = it->name.GetString();
+    for (auto it = jitem.MemberBegin(); it != jitem.MemberEnd(); it++) {
+        const char* memberName = it->name.GetString();
 
-            if (!strcmp(memberName, MEMBER_TYPE)) {
-                type = it->value.GetString();
-            }
-            else if (!strcmp(memberName, MEMBER_LOD)) {
-                lod = it->value;
-            }
-            else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
-                boundaries = it->value;
-            }
-            else if (!strcmp(memberName, MEMBER_MATERIAL)) {
-                fd.material = it->value;
-            }
-            else if (!strcmp(memberName, MEMBER_TEXTURE)) {
+        if (!strcmp(memberName, MEMBER_TYPE)) {
+            type = it->value.GetString();
+        }
+        else if (!strcmp(memberName, MEMBER_LOD)) {
+            lod = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_BOUNDARIES)) {
+            boundaries = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_MATERIAL)) {
+            fd.material = it->value;
+        }
+        else if (!strcmp(memberName, MEMBER_TEXTURE)) {
 #ifndef IGNORE_TEXTURE
-                fd.texture = it->value;
+            fd.texture = it->value;
 #endif
-            }
-            else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
-                jtemplate = it->value;
-            }
-            else if (!strcmp(memberName, MEMBER_TRANSFORMATION)) {
-                jtransformation = it->value;
-            }
-            else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
-                fd.semantics.Init(it->value);
-            }
-            else {
-                LOG_CNV("Unsupported geometry item member", memberName);
-            }
         }
-
-
-        //
-        //
-        if (!type)
-            THROW_ERROR("Geometry item type is missed");
-        if (boundaries.IsNull())
-            THROW_ERROR("Geometry item boundaries are missed");
-
-        //
-        //
-        UIntList faceIndexPath;
-
-        if (!strcmp(type, TYPE_MultiPoint)) {
-            LOG_CNV("Unsupported geometry type", type);
+        else if (!strcmp(memberName, MEMBER_TEMPLATE)) {
+            jtemplate = it->value;
         }
-        else if (!strcmp(type, TYPE_MultiLineString)) {
-            LOG_CNV("Unsupported geometry type", type);
+        else if (!strcmp(memberName, MEMBER_TRANSFORMATION)) {
+            jtransformation = it->value;
         }
-        else if (!strcmp(type, TYPE_MultiSurface)) {
-            item = ConvertMultiSurface(boundaries, fd);
-        }
-        else if (!strcmp(type, TYPE_CompositeSurface)) {
-            item = ConvertCompositeSurface(boundaries, fd);
-        }
-        else if (!strcmp(type, TYPE_Solid)) {
-            item = ConvertSolid(boundaries, fd);
-        }
-        else if (!strcmp(type, TYPE_MultiSolid)) {
-            item = ConvertMultiSolid(boundaries, fd);
-        }
-        else if (!strcmp(type, TYPE_CompositeSolid)) {
-            item = ConvertCompositeSolid(boundaries, fd);
-        }
-        else if (!strcmp(type, TYPE_GeometryInstance)) {
-            item = ConvertGeometryInstance(boundaries, jtemplate, jtransformation);
+        else if (!strcmp(memberName, MEMBER_SEMANTICS)) {
+            fd.semantics.Init(it->value);
         }
         else {
-            LOG_CNV("Unsupported geometry type", type);
-        }
-
-        assert(faceIndexPath.empty());
-
-        if (item && !lod.IsNull()) {
-            m_cityModel.CreateAttribute(item, OWL_PropLOD, NULL, lod);
+            m_cityModel.LogMessage(ILog::Level::Info, "Unsupported geometry item member '%s'", memberName);
         }
     }
-    catch (cityJson2bin_error err) {
-        item = 0;
-        LOG_CNV("Failed to convert geometry item", err.c_str());
+
+
+    //
+    //
+    if (!type)
+        m_cityModel.ThrowError("Geometry item type is missed");
+    if (boundaries.IsNull())
+        m_cityModel.ThrowError("Geometry item boundaries are missed");
+
+    //
+    //
+    UIntList faceIndexPath;
+
+    if (!strcmp(type, TYPE_MultiPoint)) {
+        m_cityModel.LogMessage(ILog::Level::Info, "Unsupported geometry type '%s'", type);
+    }
+    else if (!strcmp(type, TYPE_MultiLineString)) {
+        m_cityModel.LogMessage(ILog::Level::Info, "Unsupported geometry type '%s'", type);
+    }
+    else if (!strcmp(type, TYPE_MultiSurface)) {
+        item = ConvertMultiSurface(boundaries, fd);
+    }
+    else if (!strcmp(type, TYPE_CompositeSurface)) {
+        item = ConvertCompositeSurface(boundaries, fd);
+    }
+    else if (!strcmp(type, TYPE_Solid)) {
+        item = ConvertSolid(boundaries, fd);
+    }
+    else if (!strcmp(type, TYPE_MultiSolid)) {
+        item = ConvertMultiSolid(boundaries, fd);
+    }
+    else if (!strcmp(type, TYPE_CompositeSolid)) {
+        item = ConvertCompositeSolid(boundaries, fd);
+    }
+    else if (!strcmp(type, TYPE_GeometryInstance)) {
+        item = ConvertGeometryInstance(boundaries, jtemplate, jtransformation);
+    }
+    else {
+        m_cityModel.LogMessage(ILog::Level::Info, "Unsupported geometry type '%s'", type);
+    }
+
+    assert(faceIndexPath.empty());
+
+    if (item && !lod.IsNull()) {
+        m_cityModel.CreateAttribute(item, OWL_PropLOD, NULL, lod);
     }
 
     return item;
@@ -318,7 +318,7 @@ void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Li
 {
     if (texIndecies) {
         if (texIndecies->size() != boundaries.Size()) {
-            LOG_CNV("Texture indecies loops size mismatch number of loops in boundary", "");
+           m_cityModel.LogMessage(ILog::Level::Error, "Texture indecies loops size mismatch number of loops in boundary");
         }
     }
 
@@ -337,7 +337,7 @@ void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Li
         if (texIndecies && itTex != texIndecies->end()) {
             ListOfInt& texLoop = *itTex;
             if (texLoop.size() != jloop.Size()) {
-                LOG_CNV("Texture indecies size mismatch number of points in loop", "");
+                m_cityModel.LogMessage(ILog::Level::Error, "Texture indecies size mismatch number of points in loop");
             }
             AddTexturePoints(texLoop, faces.texCoordinates, faces.texIndecies, faces.texVert2Coord);
 
@@ -425,12 +425,11 @@ int64_t Geometry::AddTextureVertex(int jind, DoubleArray& coordinates)
         for (int i = 0; i < 2; i++) {
             v[i] = jpoint[i].GetDouble();
         }
-        for (auto val : v) {
-            coordinates.push_back(val);
+        for (auto val : v) {coordinates.push_back(val);
         }
     }
-    catch (cityJson2bin_error err) {
-        LOG_CNV("Invalid texture verex index or coordinates", err.c_str());
+    catch (CityModel::Exception) {
+        m_cityModel.LogMessage(ILog::Level::Error, "Invalid texture verex index or coordinates");
         return -3;
     }
 
@@ -533,7 +532,7 @@ GEOM::GeometricItem Geometry::ConvertGeometryInstance(rapidjson::Value& boundari
 {
     auto nTemplate = jtemplate.GetInt();
     if (nTemplate < 0 || nTemplate >= m_templates.size()) {
-        THROW_ERROR("Geometry template index is out of range");
+        m_cityModel.ThrowError("Geometry template index %d is out of range", nTemplate);
     }
 
     auto& tpl = m_templates[nTemplate];
