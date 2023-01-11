@@ -29,18 +29,17 @@ struct Progress : public cityJson2bin::IProgress
 {
     virtual void Start(int range) override
     {
-        printf("PROGRESS: Start reading...\n");
+        printf("PROGRESS: Start creating city objects...\n");
         m_range = range;
     }
 
     virtual void Step() override
     {
         m_step++;
-        if (m_range > 0) {
-            int p = (int)(100 * m_step / m_range);
-            if (p % 5 == 0) {
-                printf("PROGRESS: %d%%...\n", p);
-            }
+        int p = (int)(10 * m_step / m_range);
+        if (p > m_proc) {
+            m_proc = p;
+            printf("PROGRESS: %d%%...\n", m_proc * 10);
         }
     }
 
@@ -52,6 +51,7 @@ struct Progress : public cityJson2bin::IProgress
 private:
     int m_range = 1;
     int m_step = 0;
+    int m_proc = 0;
 };
 
 //-----------------------------------------------------------------------------------------------

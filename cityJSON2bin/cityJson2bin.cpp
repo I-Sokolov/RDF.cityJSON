@@ -31,7 +31,7 @@ extern CITYJSON2BIN_EXPORT OwlModel cityJson2bin::Open(
         model = s_pModel->Open(filePathCityJson);
     }
     catch (CityModel::Exception) {
-        s_pModel->LogMessage(ILog::Level::Error, "Failed to open model");
+        s_pModel->LogMessage(ILog::Level::Error, "Failed to read model");
     }
 
     delete s_pModel;

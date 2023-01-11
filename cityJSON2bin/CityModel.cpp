@@ -167,12 +167,13 @@ void CityModel::ConvertCityJSONObject()
 
     //
     //
+    if (m_pProgress) {
+        auto memCount = cityObjects.GetObject().MemberCount();
+        m_pProgress->Start((int)memCount);
+    }
+
     CityObjects objects;
-    int iObject = 0;
     for (auto& o : cityObjects.GetObject()) {
-        iObject++;
-        //if (iObject != 6)
-        //    continue;
 
         auto& id = o.name;
         auto& cityObject = o.value;
@@ -184,6 +185,14 @@ void CityModel::ConvertCityJSONObject()
         catch (Exception) {
             LogMessage(ILog::Level::Error, "Failed to convert city object");
         }
+
+        if (m_pProgress) {
+            m_pProgress->Step();
+        }
+    }
+
+    if (m_pProgress) {
+        m_pProgress->Finish();
     }
 
     //
