@@ -95,8 +95,61 @@ typedef std::vector<OwlInstance>    OwlInstances;
 
 //====================================================================
 
-struct ConverterState
+class ConverterState
 {
-    std::string ToString() { return "TODO"; }
+public:
+    ~ConverterState()
+    {
+        assert(m_state.empty());
+    }
+
+    void PushMember(const char* name)
+    {
+        m_state.push_back(StateItem());
+        m_state.back().isMember = true;
+        m_state.back().name = name;
+    }
+
+    void PushArrayIndex(int index)
+    {
+        m_state.push_back(StateItem());
+        m_state.back().i = index;
+    }
+
+    void Pop()
+    {
+        m_state.pop_back();
+    }
+
+    std::string ToString() 
+    {
+        std::string path;
+        for (auto& item : m_state)
+        {
+            if (item.isMember)
+            {
+                path.append("/");
+                path.append(item.name);
+            }
+            else
+            {
+                char ind[80];
+                sprintf(ind, "[%d]", item.i);
+                path.append(ind);
+            }
+        }
+
+        return path; 
+    }
+
+private:
+    struct StateItem
+    {
+        bool        isMember = false;
+        const char* name = nullptr;
+        int         i = 0;
+    };
+
+    std::list<StateItem> m_state;
 };
 

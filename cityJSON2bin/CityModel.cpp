@@ -137,7 +137,9 @@ void CityModel::ConvertCityJSONObject()
             m_geometry.SetCityVerticies (member.value);
         }
         else if (!strcmp(memberName, MEMBER_APPEARANCE)) {
+            State().PushMember(memberName);
             m_appearance.SetCityAppearance(member.value);
+            State().Pop();
         }
         else if (!strcmp(memberName, MEMBER_TRANSFORM)) {
             transform = member.value;
@@ -172,10 +174,14 @@ void CityModel::ConvertCityJSONObject()
         m_pProgress->Start((int)memCount);
     }
 
+    m_converterState.PushMember(MEMBER_CITYOBJECTS);
+
     CityObjects objects;
     for (auto& o : cityObjects.GetObject()) {
 
         auto& id = o.name;
+        m_converterState.PushMember(id.GetString());
+
         auto& cityObject = o.value;
 
         try {
@@ -186,10 +192,14 @@ void CityModel::ConvertCityJSONObject()
             LogMessage(ILog::Level::Error, "Failed to convert city object");
         }
 
+        m_converterState.Pop();
+
         if (m_pProgress) {
             m_pProgress->Step();
         }
     }
+
+    m_converterState.Pop();
 
     if (m_pProgress) {
         m_pProgress->Finish();
@@ -325,14 +335,18 @@ void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapi
             attributes = member.value;
         }
         else if (!strcmp(memberName, MEMBER_PARENTS)) {
-           for (auto& parent : member.value.GetArray()) {
+            m_converterState.PushMember(memberName);
+            for (auto& parent : member.value.GetArray()) {
                 object.parents.insert(parent.GetString());
             }
+            m_converterState.Pop();
         }
         else if (!strcmp(memberName, MEMBER_CHILDREN)) {
+            m_converterState.PushMember(memberName);
             for (auto& child : member.value.GetArray()) {
                 object.children.insert(child.GetString());
             }
+            m_converterState.Pop();
         }
         else {
             LogMessage(ILog::Level::Info, "Unsupported city object member '%s'", memberName);
@@ -345,7 +359,9 @@ void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapi
 
     OwlInstances geomItems;
     if (jgeometry.IsArray()) {
+        m_converterState.PushMember(MEMBER_GEOMETRY);
         m_geometry.Convert(jgeometry, geomItems);
+        m_converterState.Pop();
     }
 
     const char* clsname[] = { type , OWL_ClsCityJSONGenericObject, NULL };
@@ -356,10 +372,14 @@ void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapi
     AddNestedObjects(instance, OWL_PropRepresentation, geomItems);
 
     if (!attributes.IsNull()) {
+        m_converterState.PushMember(MEMBER_ATTRIBUTES);
         for (auto& attr : attributes.GetObject()) {
             auto name = attr.name.GetString();
+            m_converterState.PushMember(name);
             CreateAttribute(instance, name, OWL_PropAttrPrefix, attr.value);
+            m_converterState.Pop();
         }
+        m_converterState.Pop();
     }
 
     CreateAttribute(instance, OWL_PropObjectId, NULL, id);

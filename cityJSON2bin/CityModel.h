@@ -27,6 +27,8 @@ public:
     Appearance& GetAppearance() { return m_appearance; }
     Geometry& GetGeometry() { return m_geometry; }
 
+    ConverterState& State() { return m_converterState; }
+
 public:
     void ThrowError(const char* fmt, ...);
     void LogMessage(ILog::Level level, const char* fmt, ...);

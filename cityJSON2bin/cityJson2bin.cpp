@@ -43,11 +43,11 @@ extern CITYJSON2BIN_EXPORT OwlModel cityJson2bin::Open(
 //---------------------------------------------------------------------------------
 //
 
-void JsonAssertionError(const char* assertion, const char* file, int line)
+void JsonAssertionError(const char* assertion, const char* /*file*/, int /*line*/)
 {
     assert(s_pModel);
     if (s_pModel) {
-        s_pModel->ThrowError("Unexcepted JSON data: '%s' (failed at file %s line %d)", assertion, file, line);
+        s_pModel->ThrowError("error in JSON data: '%s'", assertion);
     }
 }
 

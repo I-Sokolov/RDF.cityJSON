@@ -19,6 +19,7 @@ void Appearance::SetCityAppearance(rapidjson::Value& appearance)
 {
     for (auto it = appearance.MemberBegin(); it != appearance.MemberEnd(); it++) {
         const char* name = it->name.GetString();
+        m_cityModel.State().PushMember(name);
         
         if (!strcmp(name, MEMBER_MATERIALS)) {
             SetCityMaterials(it->value);
@@ -44,6 +45,8 @@ void Appearance::SetCityAppearance(rapidjson::Value& appearance)
         else {
             m_cityModel.LogMessage(ILog::Level::Info, "Unknown appearance member: '%s'", name);
         }
+        
+        m_cityModel.State().Pop();
     }
 }
 
@@ -59,6 +62,7 @@ static void GetDoubles(double d[], int n, rapidjson::Value& j)
 void Appearance::SetCityMaterials(rapidjson::Value& materials)
 {
     for (auto& material : materials.GetArray()) {
+        m_cityModel.State().PushArrayIndex((int)m_materials.size());
 
         m_materials.push_back(Material());
         Material& m = m_materials.back();
@@ -94,6 +98,8 @@ void Appearance::SetCityMaterials(rapidjson::Value& materials)
                 TRACE_CNV("Unknown material attribute: %s\n", memberName);
             }
         }
+
+        m_cityModel.State().Pop();
     }
 }
 

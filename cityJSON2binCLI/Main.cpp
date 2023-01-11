@@ -29,7 +29,7 @@ struct Progress : public cityJson2bin::IProgress
 {
     virtual void Start(int range) override
     {
-        printf("PROGRESS: Start creating city objects...\n");
+        printf("PROGRESS: Start loading city objects...\n");
         m_range = range;
     }
 
@@ -45,7 +45,7 @@ struct Progress : public cityJson2bin::IProgress
 
     virtual void Finish() override
     {
-        printf("PROGRESS: Finish reading\n");
+        printf("PROGRESS: city objects loaded\n");
     }
 
 private:
@@ -71,7 +71,7 @@ struct Log : public cityJson2bin::ILog
             case cityJson2bin::ILog::Level::Info: lev = "INFO"; break;
         }
 
-        printf("++ LOG %s: %s (at %s)\n", lev, msg, converterState);
+        printf("++ LOG %s: %s (for %s)\n", lev, msg, converterState);
     }
 
     std::set<std::string> m_caregorites;

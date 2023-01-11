@@ -13,11 +13,11 @@ void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
 {
     //std::vector<std::string, std::list<GEOM::GeometricItem>> lod2items;
 
+    int nitem = 0;
     for (auto& jitem : jgeometry.GetArray()) {
-        //auto type = jitem[MEMBER_TYPE].GetString();
-        //if (strcmp(type, TYPE_GeometryInstance))
-        //    continue;
 
+        m_cityModel.State().PushArrayIndex(nitem++);
+        
         try {
             auto item = ConvertItem(jitem);
             if (item) {
@@ -27,6 +27,8 @@ void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
         catch (CityModel::Exception) {
             m_cityModel.LogMessage(ILog::Level::Error, "Failed to convert geometry item");
         }
+
+        m_cityModel.State().Pop();
     }
 /*
     if (items.empty()) {
