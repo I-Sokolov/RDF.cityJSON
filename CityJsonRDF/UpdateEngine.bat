@@ -5,6 +5,7 @@ echo echo Update Engine includes
 xcopy %RDF_ENGINE_INCLUDE% engine\include /F /Y
 :IncUpdated
 
+if .%1.==.. goto LibUpdated
 echo Check IFC engine binaries
 if .%RDF_ENGINE_LIB%.==.. goto LibUpdated
 echo Update lib and dll
