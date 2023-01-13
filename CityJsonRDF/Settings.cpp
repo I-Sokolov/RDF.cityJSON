@@ -141,11 +141,13 @@ GEOM::Color Settings::GetSemanticColor(OwlInstance semantic)
         c.set_R(clr.color[0]);
         c.set_G(clr.color[1]);
         c.set_B(clr.color[2]);
+        c.set_W(1);
 
         clr.rdfColor.set_ambient(c);
         clr.rdfColor.set_diffuse(c);
         clr.rdfColor.set_emissive(c);
         clr.rdfColor.set_specular(c);
+        clr.rdfColor.set_ambientReflectance(1);
     }
 
     return clr.rdfColor;
