@@ -57,7 +57,7 @@ private:
     typedef std::list<FaceGroup> FaceGroups;
 
 private:
-    GEOM::GeometricItem ConvertItem(rapidjson::Value& jitem);
+    GEOM::GeometricItem ConvertItem(rapidjson::Value& jitem, int nItem, bool isTemplate);
     GEOM::GeometricItem ConvertCompositeSolid(rapidjson::Value& boundaries, PerFaceData& fd);    
     GEOM::GeometricItem ConvertMultiSolid(rapidjson::Value& boundaries, PerFaceData& fd);
     GEOM::GeometricItem ConvertSolidSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd);

@@ -19,7 +19,7 @@ void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
         m_cityModel.State().PushArrayIndex(nitem++);
         
         try {
-            auto item = ConvertItem(jitem);
+            auto item = ConvertItem(jitem, nitem, false);
             if (item) {
                 items.push_back(item);
             }
@@ -47,7 +47,7 @@ void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
+GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem, int nItem, bool isTemplate)
 {
     GEOM::GeometricItem item;
 
@@ -136,8 +136,20 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem)
 
     assert(faceIndexPath.empty());
 
-    if (item && !lod.IsNull()) {
-        m_cityModel.CreateAttribute(item, OWL_PropLOD, NULL, lod);
+    if (item) {
+        std::string name(isTemplate ? "Template" : "Item");
+        char num[256];
+        snprintf(num, 255, " %d", nItem);
+        name.append(num); 
+        if (lod.IsString()) {
+            name.append(" LoD ");
+            name.append(lod.GetString());
+        }
+        SetNameOfInstance(item, name.c_str());
+
+        if (!lod.IsNull()) {
+            m_cityModel.CreateAttribute(item, OWL_PropLOD, NULL, lod);
+        }
     }
 
     return item;
@@ -540,7 +552,7 @@ GEOM::GeometricItem Geometry::ConvertGeometryInstance(rapidjson::Value& boundari
     auto& tpl = m_templates[nTemplate];
     if (!tpl.json.IsNull()) {
         UseTemplateVerticies(true);
-        tpl.item = ConvertItem(tpl.json);
+        tpl.item = ConvertItem(tpl.json, nTemplate, true);
         UseTemplateVerticies(false);
         tpl.json.SetNull();
     }
