@@ -457,7 +457,8 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
     const char* clsnames[] = { OWL_ClsSurface, OWL_BoundaryRepresentation, NULL };
     auto cls = m_cityModel.GetOrCreateClass(clsnames, false);
 
-    GEOM::BoundaryRepresentation face = CreateInstance(cls);
+    auto name = GetNameOfInstance(group.key.semantic);
+    GEOM::BoundaryRepresentation face = CreateInstance(cls, name);
     face.set_vertices(group.coordinates.data(), group.coordinates.size());
     face.set_indices(group.indecies.data(), group.indecies.size());
 
