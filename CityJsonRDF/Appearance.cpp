@@ -234,16 +234,17 @@ int Appearance::GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, siz
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Material Appearance::GetRdfMaterial(Theme2Index& materials, Theme2Index& textures)
+GEOM::Material Appearance::GetRdfMaterial(Theme2Index& materials, Theme2Index& textures, OwlInstance semantic)
 {
     int iMat = GetThemeIndex(materials, m_defaultThemeMaterial, m_materials.size());
     int iTex = GetThemeIndex(textures, m_defaultThemeTexture, m_textures.size());
 
     auto& tex2rdf = m_matTex2Rdf[iMat];
-    auto& rdfMat = tex2rdf[iTex];
+    auto& sem2rdf = tex2rdf[iTex];
+    auto& rdfMat = sem2rdf[semantic];
 
     if (!rdfMat) {
-        GEOM::Color color = GetRdfColor(iMat);
+        GEOM::Color color = GetRdfColor(iMat, semantic);
         GEOM::Texture tex = GetRdfTexture(iTex);
 
         rdfMat = GEOM::Material::Create(m_cityModel.RdfModel());
@@ -260,16 +261,19 @@ GEOM::Material Appearance::GetRdfMaterial(Theme2Index& materials, Theme2Index& t
 //
 ListOfListOfInt* Appearance::GetTextuteIndecies(Theme2Index& textures, Theme2TextureIndecies& textureIndecies)
 {
-    auto theme = GetActiveTheme(textures, m_defaultThemeTexture);
-    if (theme) {
-        auto it = textureIndecies.find(theme);
-        if (it != textureIndecies.end()) {
-            return &(it->second);
-        }
-        else {
-            m_cityModel.LogMessage(ILog::Level::Error, "Theme '%s' is misses in texture indecies", theme);
+    if (m_cityModel.GetSettings().UseTexture()) {
+        auto theme = GetActiveTheme(textures, m_defaultThemeTexture);
+        if (theme) {
+            auto it = textureIndecies.find(theme);
+            if (it != textureIndecies.end()) {
+                return &(it->second);
+            }
+            else {
+                m_cityModel.LogMessage(ILog::Level::Error, "Theme '%s' is misses in texture indecies", theme);
+            }
         }
     }
+
     return nullptr;
 }
 
@@ -314,9 +318,10 @@ GEOM::ColorComponent Appearance::CreateColorComponent(double rgb[3], double scal
 
 //-----------------------------------------------------------------------------------------------
 //
-GEOM::Color Appearance::GetRdfColor(int iMat)
+GEOM::Color Appearance::GetRdfColor(int iMat, OwlInstance semantic)
 {
-    if (iMat >= 0 && iMat < m_materials.size()) {
+    if (m_cityModel.GetSettings().UseMaterial() && iMat >= 0 && iMat < m_materials.size()) {
+
         auto& m = m_materials[iMat];
 
         if (!m.rdfColor) {
@@ -338,7 +343,7 @@ GEOM::Color Appearance::GetRdfColor(int iMat)
         return m.rdfColor;
     }
     else {
-        return NULL;
+        return m_cityModel.GetSettings().GetSemanticColor(semantic);
     }
 }
 
@@ -346,7 +351,8 @@ GEOM::Color Appearance::GetRdfColor(int iMat)
 //
 GEOM::Texture Appearance::GetRdfTexture(int iTex)
 {
-    if (iTex >= 0 && iTex < m_textures.size()) {
+    if (m_cityModel.GetSettings().UseTexture() && iTex >= 0 && iTex < m_textures.size()) {
+
         auto& t = m_textures[iTex];
 
         if (!t.rdfTexture) {

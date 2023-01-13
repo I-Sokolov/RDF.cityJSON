@@ -94,6 +94,9 @@ typedef std::vector<OwlInstance>    OwlInstances;
 #endif // DEBUG
 
 //====================================================================
+extern bool JsonReadFile(rapidjson::Document& doc, const char* filePath);
+
+//====================================================================
 
 class ConverterState
 {
@@ -146,7 +149,7 @@ private:
     struct StateItem
     {
         bool        isMember = false;
-        const char* name = nullptr;
+        std::string name;
         int         i = 0;
     };
 

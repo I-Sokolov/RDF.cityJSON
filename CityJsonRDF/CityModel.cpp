@@ -11,6 +11,7 @@ using namespace CityJsonRDF;
 CityModel::CityModel(CityJsonRDF::IProgress* pProgress, CityJsonRDF::ILog* pLog)
     : m_geometry(*this)
     , m_appearance(*this)
+    , m_settings(*this)
     , m_pProgress (pProgress)
     , m_pLog (pLog)
 {
@@ -32,6 +33,8 @@ CityModel::~CityModel()
 //
 OwlModel CityModel::Open(const char* cityFilePath)
 {
+    GetSettings().Load();
+
     ReadCityFile(cityFilePath);
 
     CreateBaseClasses();
@@ -81,21 +84,9 @@ void CityModel::LogMessage(ILog::Level level, const char* fmt, ...)
 //
 void CityModel::ReadCityFile(const char* cityFilePath)
 {
-    const char* ReadMode = "rb";
-#ifndef WINDOWS
-    ReadMode = "r";
-#endif // !WINDOWS
-
-    FILE* fpInput = fopen(cityFilePath, ReadMode);
-    if (!fpInput)
+    if (!JsonReadFile(m_cityDOM, cityFilePath)) {
         ThrowError("Failed to open file %s", cityFilePath);
-
-    static char readBuff[65536];
-    rapidjson::FileReadStream rstream(fpInput, readBuff, sizeof(readBuff));
-
-    m_cityDOM.ParseStream(rstream);
-
-    fclose(fpInput);
+    }
 }
 
 //-----------------------------------------------------------------------------------------------

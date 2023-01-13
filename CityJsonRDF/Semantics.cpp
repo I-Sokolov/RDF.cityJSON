@@ -120,7 +120,7 @@ OwlInstance Semantics::GetOwlInstance(Surface& surf)
 
         const char* clsname[] = { OWL_ClsSurfaceSemantic, NULL };
         auto cls = m_cityModel.GetOrCreateClass(clsname, false);
-        surf.owlInstance = CreateInstance(cls);
+        surf.owlInstance = CreateInstance(cls, type);
 
         auto prop = m_cityModel.GetOrCreateProperty(cls, OWL_PropType, NULL, DATATYPEPROPERTY_TYPE_CHAR);
         SetDatatypeProperty(surf.owlInstance, prop, type);

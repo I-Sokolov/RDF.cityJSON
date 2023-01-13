@@ -9,6 +9,10 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
+#include <Windows.h>
+#undef max
+#undef GetObject
+
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -18,6 +22,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <filesystem>
 
 #define RAPIDJSON_ASSERT(x) {if(!(x)) {JsonAssertionError(#x,__FILE__,__LINE__);}}
 extern void JsonAssertionError(const char* assertion, const char* file, int line);

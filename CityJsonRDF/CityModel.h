@@ -3,8 +3,10 @@
 
 #include "CityJsonRDF.h"
 using namespace CityJsonRDF;
+#include "CommonDefs.h"
 #include "Geometry.h"
 #include "Appearance.h"
+#include "Settings.h"
 
 class CityModel
 {
@@ -19,6 +21,8 @@ public:
     OwlModel Open(const char* cityFilePath);
 
 public:
+    Settings& GetSettings() { return m_settings; }
+
     OwlModel RdfModel() { return m_owlModel; }    
     OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/, bool addPrefix);
     RdfProperty GetOrCreateProperty(OwlClass cls, const char* propName, const char* prefix, RdfPropertyType propType, const char* refCls = nullptr, int64_t minCard = 0, int64_t maxCard = 1, int attempt = 0);
@@ -63,4 +67,5 @@ private:
 
     Geometry                m_geometry;
     Appearance              m_appearance;
+    Settings                m_settings;
 };

@@ -23,7 +23,7 @@ public:
 
     void GetSurfaceAppearance(SurfaceAppearance& appearance, rapidjson::Value& jmaterial, rapidjson::Value& jtexture, UIntList& faceIndexPath);
     
-    GEOM::Material GetRdfMaterial(Theme2Index& materials, Theme2Index& textures);
+    GEOM::Material GetRdfMaterial(Theme2Index& materials, Theme2Index& textures, OwlInstance semantic);
     ListOfListOfInt* GetTextuteIndecies(Theme2Index& textures, Theme2TextureIndecies& textureIndecies);
     rapidjson::Value& GetTextureVertex(int ind) { return m_textureVerticies[ind]; }
 
@@ -59,7 +59,8 @@ private:
 
     typedef std::vector<Texture> Textures;
 
-    typedef std::map<int, GEOM::Material> Tex2Rdf;
+    typedef std::map<OwlInstance, GEOM::Material> Semantic2Rdf;
+    typedef std::map<int, Semantic2Rdf> Tex2Rdf;
     typedef std::map<int, Tex2Rdf> MatTex2Rdf;
 
 private:
@@ -68,7 +69,7 @@ private:
     const char* GetActiveTheme(Theme2Index& th2ind, const char* defaultTheme);
     int GetThemeIndex(Theme2Index& th2ind, const char* defaultTheme, size_t maxInd);
 
-    GEOM::Color GetRdfColor(int iMat);
+    GEOM::Color GetRdfColor(int iMat, OwlInstance semantic);
     GEOM::ColorComponent CreateColorComponent(double rgb[3], double scale = -1);
     GEOM::Texture GetRdfTexture(int iTex);
 

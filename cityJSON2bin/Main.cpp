@@ -71,7 +71,11 @@ struct Log : public CityJsonRDF::ILog
             case CityJsonRDF::ILog::Level::Info: lev = "INFO"; break;
         }
 
-        printf("++ LOG %s: %s (for %s)\n", lev, msg, converterState);
+        printf("++ LOG %s: %s", lev, msg);
+        if (converterState && *converterState) {
+            printf(" (for %s)", converterState);
+        }
+        printf("\n");
     }
 
     std::set<std::string> m_caregorites;

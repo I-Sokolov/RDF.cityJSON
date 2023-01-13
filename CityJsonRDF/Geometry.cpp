@@ -449,7 +449,7 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
     face.set_vertices(group.coordinates.data(), group.coordinates.size());
     face.set_indices(group.indecies.data(), group.indecies.size());
 
-    auto rdfMat = m_cityModel.GetAppearance().GetRdfMaterial (group.key.materials, group.key.textures);
+    auto rdfMat = m_cityModel.GetAppearance().GetRdfMaterial (group.key.materials, group.key.textures, group.key.semantic);
     if (rdfMat) {
         face.set_material(rdfMat);
     }
