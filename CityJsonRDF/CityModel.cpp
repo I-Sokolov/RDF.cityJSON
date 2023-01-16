@@ -438,7 +438,7 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, c
         else {
             int64_t minC = 0;
             int64_t maxC = 0;
-            GetClassPropertyCardinalityRestriction(cls, prop, &minC, &maxC);
+            GetClassPropertyAggregatedCardinalityRestriction(cls, prop, &minC, &maxC);
             if (minC == -1 && maxC == -1) {
                 SetClassPropertyCardinalityRestriction(cls, prop, minCard, maxCard);
             }
