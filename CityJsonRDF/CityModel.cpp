@@ -100,9 +100,9 @@ void CityModel::CreateBaseClasses()
     GetOrCreateProperty(clsGenericObject, OWL_PropChildren, NULL, OBJECTPROPERTY_TYPE, OWL_ClsCityJSONGenericObject, 0, -1);
 
     const char* clsnameGeometricItem[] = { OWL_ClsGeomItem, OWL_Collection, NULL };
-    /*auto clsGeometricItem =*/ GetOrCreateClass(clsnameGeometricItem, false);
+    auto clsGeometricItem = GetOrCreateClass(clsnameGeometricItem, false);
 
-    //GetOrCreateProperty(clsGeometricItem, OWL_PropLOD, NULL, DATATYPEPROPERTY_TYPE_CHAR);
+    GetOrCreateProperty(clsGeometricItem, OWL_PropLOD, NULL, DATATYPEPROPERTY_TYPE_CHAR);
 }
 
 //-----------------------------------------------------------------------------------------------

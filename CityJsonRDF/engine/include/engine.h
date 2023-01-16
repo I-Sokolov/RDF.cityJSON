@@ -1759,6 +1759,21 @@ void		DECL STDC	GetClassPropertyCardinalityRestrictionEx(
 									int64_t					* maxCard
 								);
 
+void		DECL STDC	GetClassPropertyAggregatedCardinalityRestriction(
+									OwlClass				owlClass,
+									RdfProperty				rdfProperty,
+									int64_t					* minCard,
+									int64_t					* maxCard
+								);
+
+void		DECL STDC	GetClassPropertyAggregatedCardinalityRestrictionEx(
+									OwlModel				model,
+									OwlClass				owlClass,
+									RdfProperty				rdfProperty,
+									int64_t					* minCard,
+									int64_t					* maxCard
+								);
+
 //
 //		GetGeometryClass                            (http://rdf.bg/gkdoc/CP64/GetGeometryClass.html)
 //				OwlClass				owlClass							IN
@@ -2591,6 +2606,52 @@ OwlClass	DECL STDC	GetInstanceClassByIteratorEx(
 									OwlInstance				owlInstance,
 									OwlClass				owlClass
 								);
+
+#ifdef __cplusplus
+	}
+#endif
+
+//
+//
+static	inline	bool	GetInstancePropertyCardinalityRestriction(
+									OwlInstance				owlInstance,
+									RdfProperty				rdfProperty,
+									int64_t					* minCard,
+									int64_t					* maxCard
+								)
+{
+	OwlClass	owlClass = GetInstanceClassByIterator(owlInstance, 0);
+
+	GetClassPropertyCardinalityRestriction(
+			owlClass,
+			rdfProperty,
+			minCard,
+			maxCard
+		);
+
+	while (owlClass = GetInstanceClassByIterator(owlInstance, owlClass)) {
+		int64_t	myMinCard = -1,
+				myMaxCard = -1;
+
+		GetClassPropertyCardinalityRestriction(
+				owlClass,
+				rdfProperty,
+				&myMinCard,
+				&myMaxCard
+			);
+
+		if ((*minCard) < myMinCard)
+			(*minCard) = myMinCard;
+
+		if (myMaxCard >= 0 &&
+			((*maxCard) == -1 || (*maxCard) > myMaxCard))
+			(*maxCard) = myMaxCard;
+	}
+}
+
+#ifdef __cplusplus
+	extern "C" {
+#endif
 
 OwlClass	DECL STDC	GetInstanceGeometryClass(
 									OwlInstance				owlInstance
@@ -5165,24 +5226,6 @@ static	inline	uint32_t	GetMaterialColorSpecular(
 #endif
 
 //
-//		GetPropertyRestrictionsConsolidated         (http://rdf.bg/gkdoc/CP64/GetPropertyRestrictionsConsolidated.html)
-//				OwlClass				owlClass							IN
-//				RdfProperty				rdfProperty							IN
-//				int64_t					* minCard							IN / OUT
-//				int64_t					* maxCard							IN / OUT
-//
-//				void					returns
-//
-//	...
-//
-void		DECL STDC	GetPropertyRestrictionsConsolidated(
-									OwlClass				owlClass,
-									RdfProperty				rdfProperty,
-									int64_t					* minCard,
-									int64_t					* maxCard
-								);
-
-//
 //		GetVertexColor                              (http://rdf.bg/gkdoc/CP64/GetVertexColor.html)
 //				OwlModel				model								IN
 //				const void				* vertexBuffer						IN
@@ -5468,7 +5511,7 @@ void		DECL STDC	GetPoints(
 								);
 
 //
-//		GetPropertyRestrictions                     (http://rdf.bg/gkdoc/CP64/GetPropertyRestrictions___.html)
+//		GetPropertyRestrictionsConsolidated         (http://rdf.bg/gkdoc/CP64/GetPropertyRestrictionsConsolidated.html)
 //				OwlClass				owlClass							IN
 //				RdfProperty				rdfProperty							IN
 //				int64_t					* minCard							IN / OUT
@@ -5476,9 +5519,9 @@ void		DECL STDC	GetPoints(
 //
 //				void					returns
 //
-//	This call is deprecated and will be removed by end of 2022. Please use the call GetClassPropertyCardinalityRestriction instead,
+//	This call is deprecated and will be removed by end of 2022. Please use the call GetClassPropertyAggregatedCardinalityRestriction instead,
 //
-void		DECL STDC	GetPropertyRestrictions(
+void		DECL STDC	GetPropertyRestrictionsConsolidated(
 									OwlClass				owlClass,
 									RdfProperty				rdfProperty,
 									int64_t					* minCard,
