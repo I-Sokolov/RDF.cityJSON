@@ -148,7 +148,7 @@ GEOM::GeometricItem Geometry::ConvertItem(rapidjson::Value& jitem, int nItem, bo
         SetNameOfInstance(item, name.c_str());
 
         if (!lod.IsNull()) {
-            m_cityModel.CreateAttribute(item, OWL_PropLOD, NULL, lod);
+            m_cityModel.CreateAttribute(item, CJProp_LOD, NULL, lod);
         }
     }
 
@@ -173,9 +173,6 @@ GEOM::GeometricItem Geometry::ConvertMultiSolid(rapidjson::Value& boundaries, Pe
 //
 GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    const char* clsnames[] = {className , OWL_ClsGeomItem, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
-
     std::vector<GEOM::GeometricItem> solids;
     fd.indexPath.push_back(0);
     for (auto& jsolid : boundaries.GetArray()) {
@@ -187,6 +184,7 @@ GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::
     }
     fd.indexPath.pop_back();
 
+    auto cls = m_cityModel.GetOrCreateClass(className, true, CJCls_GeometryBody);
     GEOM::Collection csolid = CreateInstance(cls);
     csolid.set_objects(solids.data(), solids.size());
 
@@ -197,9 +195,6 @@ GEOM::GeometricItem Geometry::ConvertSolidSet(const char* className, rapidjson::
 //
 GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, PerFaceData& fd)
 {
-    const char* clsnames[] = { TYPE_Solid, OWL_ClsGeomItem, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
-
     std::vector<GEOM::GeometricItem> shells;
     fd.indexPath.push_back(0);
     for (auto& jshell : boundaries.GetArray()) {
@@ -210,6 +205,8 @@ GEOM::GeometricItem Geometry::ConvertSolid(rapidjson::Value& boundaries, PerFace
         fd.indexPath.back()++;
     }
     fd.indexPath.pop_back();
+
+    auto cls = m_cityModel.GetOrCreateClass(TYPE_Solid, true, CJCls_GeometryBody);
 
     GEOM::Collection csolid = CreateInstance(cls);
     csolid.set_objects(shells.data(), shells.size());
@@ -256,8 +253,7 @@ GEOM::GeometricItem Geometry::ConvertSurfaceSet(const char* className, rapidjson
         return NULL;
     }
 
-    const char* clsnames[] = { className , OWL_ClsGeomItem, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
+    auto cls = m_cityModel.GetOrCreateClass(className, true, CJCls_GeometryBody);
 
     GEOM::Collection multiSurface = CreateInstance(cls);
     multiSurface.set_objects(items.data(), items.size());
@@ -454,8 +450,7 @@ int64_t Geometry::AddTextureVertex(int jind, DoubleArray& coordinates)
 //
 GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
 {
-    const char* clsnames[] = { OWL_ClsSurface, OWL_BoundaryRepresentation, NULL };
-    auto cls = m_cityModel.GetOrCreateClass(clsnames, false);
+    auto cls = m_cityModel.GetOrCreateClass(CJCls_Surface, false, RDFCls_BoundaryRepresentation);
 
     auto name = GetNameOfInstance(group.key.semantic);
     GEOM::BoundaryRepresentation face = CreateInstance(cls, name);
@@ -469,7 +464,7 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
 
     auto semantic = group.key.semantic;
     if (semantic) {
-        auto prop = m_cityModel.GetOrCreateProperty(cls, OWL_PropSemantic, NULL, OBJECTPROPERTY_TYPE, OWL_ClsSurfaceSemantic);
+        auto prop = m_cityModel.GetOrCreateProperty(cls, CJProp_Semantic, NULL, OBJECTPROPERTY_TYPE, CJCls_SurfaceSemantic);
         SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 
@@ -592,8 +587,7 @@ GEOM::GeometricItem Geometry::ConvertGeometryInstance(rapidjson::Value& boundari
     T.set__33(t[10]);
     T.set__43(t[11]);
 
-    const char* clsnames[] = { TYPE_GeometryInstance, OWL_Transformation, NULL};
-    auto cls = m_cityModel.GetOrCreateClass(clsnames, true);
+    auto cls = m_cityModel.GetOrCreateClass(TYPE_GeometryInstance, true, CJCls_GeometryObject, RDFCls_Transformation);
     
     GEOM::Transformation trans = CreateInstance(cls);
     trans.set_object(tpl.item);

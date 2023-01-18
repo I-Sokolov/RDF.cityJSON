@@ -37,7 +37,7 @@ OwlModel CityModel::Open(const char* cityFilePath)
 
     ReadCityFile(cityFilePath);
 
-    CreateBaseClasses();
+    InitOntology();
 
     ConvertCityJSONObject();
 
@@ -91,18 +91,19 @@ void CityModel::ReadCityFile(const char* cityFilePath)
 
 //-----------------------------------------------------------------------------------------------
 //
-void CityModel::CreateBaseClasses()
+void CityModel::InitOntology()
 {
-    const char* clsnameGenericObject[] = { OWL_ClsCityJSONGenericObject, NULL};
-    auto clsGenericObject = GetOrCreateClass(clsnameGenericObject, false);
-    
-    GetOrCreateProperty(clsGenericObject, OWL_PropRepresentation, NULL, OBJECTPROPERTY_TYPE, OWL_GeometricItem, 0, -1);
-    GetOrCreateProperty(clsGenericObject, OWL_PropChildren, NULL, OBJECTPROPERTY_TYPE, OWL_ClsCityJSONGenericObject, 0, -1);
+    //create common base classes
+    auto clsGenericObject = GetOrCreateClass(CJCls_GenericObject, false);
+    auto clsGeometryObject = GetOrCreateClass(CJCls_GeometryObject, false);
+    GetOrCreateClass(CJCls_GeometryBody, false, CJCls_GeometryObject, RDFCls_Collection);
+    GetOrCreateClass(CJCls_SurfaceSemantic, false);
+    GetOrCreateClass(CJCls_Attributes, false);
 
-    const char* clsnameGeometricItem[] = { OWL_ClsGeomItem, OWL_Collection, NULL };
-    auto clsGeometricItem = GetOrCreateClass(clsnameGeometricItem, false);
+    GetOrCreateProperty(clsGenericObject, CJProp_Representation, NULL, OBJECTPROPERTY_TYPE, CJCls_GeometryObject, 0, -1);
+    GetOrCreateProperty(clsGenericObject, CJProp_Children, NULL, OBJECTPROPERTY_TYPE, CJCls_GenericObject, 0, -1);
 
-    GetOrCreateProperty(clsGeometricItem, OWL_PropLOD, NULL, DATATYPEPROPERTY_TYPE_CHAR);
+    GetOrCreateProperty(clsGeometryObject, CJProp_LOD, NULL, DATATYPEPROPERTY_TYPE_CHAR);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -203,16 +204,15 @@ void CityModel::ConvertCityJSONObject()
 
     //
     //
-    const char* clsname[] = { type , OWL_ClsCityJSONGenericObject, NULL};
-    auto cls = GetOrCreateClass(clsname, true);
+    auto cls = GetOrCreateClass(type, true, CJCls_GenericObject);
     OwlInstance city = CreateInstance(cls, type);
 
     //
     //
-    AddNestedObjects(city, OWL_PropChildren, owlObjects);
+    AddNestedObjects(city, CJProp_Children, owlObjects);
 
-    CreateAttribute(city, MEMBER_TRANSFORM, OWL_PropCityJsonPrefix, transform);
-    CreateAttribute(city, MEMBER_METADATA, OWL_PropCityJsonPrefix, metadata);
+    CreateAttribute(city, MEMBER_TRANSFORM, CJProp_Prefix, transform);
+    CreateAttribute(city, MEMBER_METADATA, CJProp_Prefix, metadata);
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -295,7 +295,7 @@ void CityModel::SetupChildren(CityObjects& objects, OwlInstances& topLevel)
             }
 
             if (!owlChildren.empty()) {
-                AddNestedObjects(object.second.owlObject, OWL_PropChildren, owlChildren);
+                AddNestedObjects(object.second.owlObject, CJProp_Children, owlChildren);
             }
 
             if (object.second.parents.empty()) {
@@ -355,40 +355,33 @@ void CityModel::ConvertCityObject(CityObject& object, rapidjson::Value& id, rapi
         m_converterState.Pop();
     }
 
-    const char* clsname[] = { type , OWL_ClsCityJSONGenericObject, NULL };
-    auto cls = GetOrCreateClass(clsname, true);
+    auto cls = GetOrCreateClass(type, true, CJCls_GenericObject);
     OwlInstance instance = CreateInstance(cls, id.GetString());
     object.owlObject = instance;
 
-    AddNestedObjects(instance, OWL_PropRepresentation, geomItems);
+    AddNestedObjects(instance, CJProp_Representation, geomItems);
 
     if (!attributes.IsNull()) {
         m_converterState.PushMember(MEMBER_ATTRIBUTES);
         for (auto& attr : attributes.GetObject()) {
             auto name = attr.name.GetString();
             m_converterState.PushMember(name);
-            CreateAttribute(instance, name, OWL_PropAttrPrefix, attr.value);
+            CreateAttribute(instance, name, CJProp_AttrPrefix, attr.value);
             m_converterState.Pop();
         }
         m_converterState.Pop();
     }
 
-    CreateAttribute(instance, OWL_PropObjectId, NULL, id);
+    CreateAttribute(instance, CJProp_ObjectId, NULL, id);
 }
 
 //-----------------------------------------------------------------------------------------------
 //
-OwlClass CityModel::GetOrCreateClass(const char* names[], bool addPrefix)
-{
-    if (!names || !names[0]) {
-        return NULL;
-    }
-
-    const char* name = names[0];
-    
+OwlClass CityModel::GetOrCreateClass(const char* name, bool addPrefix, const char* parent1, const char* parent2)
+{    
     std::string prefixedName;
     if (addPrefix) {
-        prefixedName.assign(OWL_ClsCityJsonPrefix);
+        prefixedName.assign(CJCls_Prefix);
         prefixedName.append(name);
         name = prefixedName.c_str();
     }
@@ -397,16 +390,28 @@ OwlClass CityModel::GetOrCreateClass(const char* names[], bool addPrefix)
     
     if (!cls) {
         cls = CreateClass(m_owlModel, name);
-
-        auto parent = GetOrCreateClass(names + 1, false);
-        if (parent) {
-            SetClassParent(cls, parent, 1);
-        }
+        AddClassParent(cls, parent1);
+        AddClassParent(cls, parent2);
     }
 
     return cls;
 }
 
+
+//-----------------------------------------------------------------------------------------------
+//
+void CityModel::AddClassParent(OwlClass cls, const char* parentName)
+{
+    if (parentName) {
+        auto parent = GetClassByName(m_owlModel, parentName);
+        if (parent) {
+            SetClassParent(cls, parent, 1);
+        }
+        else {
+            LogMessage(ILog::Level::Error, "Class '%' does not exist", parentName);
+        }
+    }
+}
 
 //-----------------------------------------------------------------------------------------------
 //
@@ -469,13 +474,12 @@ RdfProperty CityModel::GetOrCreateProperty(OwlClass cls, const char* propName, c
 //
 OwlInstance CityModel::ConvertAttributeObject(const char* name, rapidjson::Value& value)
 {
-    const char* clsnames[] = { name, NULL };
-    auto cls = GetOrCreateClass(clsnames, true);
+    auto cls = GetOrCreateClass(name, true, CJCls_Attributes);
 
     auto inst = CreateInstance(cls);
 
     for (auto& attr : value.GetObject()) {
-        CreateAttribute(inst, attr.name.GetString(), OWL_PropAttrPrefix, attr.value);
+        CreateAttribute(inst, attr.name.GetString(), CJProp_AttrPrefix, attr.value);
     }
 
     return inst;

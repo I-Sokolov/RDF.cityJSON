@@ -24,7 +24,8 @@ public:
     Settings& GetSettings() { return m_settings; }
 
     OwlModel RdfModel() { return m_owlModel; }    
-    OwlClass GetOrCreateClass(const char* names[] /*from this to parents*/, bool addPrefix);
+    OwlClass GetOrCreateClass(const char* name, bool addPrefix, const char* parent1 = nullptr, const char* parent2 = nullptr);
+    void AddClassParent(OwlClass cls, const char* parentName);
     RdfProperty GetOrCreateProperty(OwlClass cls, const char* propName, const char* prefix, RdfPropertyType propType, const char* refCls = nullptr, int64_t minCard = 0, int64_t maxCard = 1, int attempt = 0);
     void CreateAttribute(OwlInstance instance, const char* name, const char* prefix, rapidjson::Value& value);
 
@@ -49,7 +50,7 @@ private:
 private:
     void ReadCityFile(const char* cityFilePath);
 
-    void CreateBaseClasses();
+    void InitOntology();
     void AddNestedObjects(OwlInstance instance, const char* propName, OwlInstances& value);
     OwlInstance ConvertAttributeObject(const char* name, rapidjson::Value& value);
 
