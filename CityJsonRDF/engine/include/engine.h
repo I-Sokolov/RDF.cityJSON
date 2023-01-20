@@ -2629,7 +2629,7 @@ static	inline	bool	GetInstancePropertyCardinalityRestriction(
 			maxCard
 		);
 
-	while (owlClass = GetInstanceClassByIterator(owlInstance, owlClass)) {
+	while ( (owlClass = GetInstanceClassByIterator(owlInstance, owlClass)) ) {
 		int64_t	myMinCard = -1,
 				myMaxCard = -1;
 
