@@ -468,6 +468,11 @@ GEOM::GeometricItem Geometry::CreateFaceGroup(FaceGroup& group)
         SetObjectTypeProperty(face, prop, &semantic, 1);
     }
 
+    if (group.texIndecies.size() > 0 && group.texIndecies.size() != group.indecies.size()) {
+        m_cityModel.LogMessage(CityJsonRDF::ILog::Level::Error, "Number of texture indecies mismatches number of indecies");
+        group.texIndecies.clear();
+    }
+
     bool hasTexInd = false;
     for (auto ind : group.texIndecies) {
         if (ind >= 0) {
