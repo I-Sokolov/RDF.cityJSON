@@ -11,6 +11,8 @@ if .%RDF_ENGINE_LIB%.==.. goto LibUpdated
 echo Update lib and dll
 xcopy %RDF_ENGINE_LIB%Debug\engine.lib engine\lib\%3\ /F /Y
 xcopy %RDF_ENGINE_LIB%%2\engine.dll engine\lib\%3\%2\ /F /Y
+xcopy %RDF_ENGINE_LIB%%2\engine.pdb engine\lib\%3\%2\ /F /Y
 echo Copy dll to output
 xcopy engine\lib\%3\%2\engine.dll %1 /F /Y
+xcopy engine\lib\%3\%2\engine.pdb %1 /F /Y
 :LibUpdated
