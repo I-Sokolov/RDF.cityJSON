@@ -33,7 +33,7 @@ namespace CityJsonRDF
     /// </summary>
     struct ILog
     {
-        enum class Level { Error, Warning, Info };
+        enum class Level { Info = 0, Warning = 1, Error = 2 };
         virtual void Message(Level level, const char* category, const char* msg, const char* converterState) = NULL;
     };
 
