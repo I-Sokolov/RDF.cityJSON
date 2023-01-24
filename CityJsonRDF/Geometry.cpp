@@ -363,10 +363,17 @@ void Geometry::AddFaceToGroup(FaceGroup& faces, rapidjson::Value& boundaries, Li
 //
 void Geometry::AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v)
 {
+#if 1 //inverse loops
+    for (auto k = jpoints.Size(); k > 0; k--) {
+        auto i = GetAddVertex(jpoints[k-1], coordinates, v2v);
+        ind.push_back(i);
+    }
+#else
     for (auto& jpoint : jpoints.GetArray()) {
         auto i = GetAddVertex(jpoint, coordinates, v2v);
         ind.push_back(i);
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -403,10 +410,17 @@ int64_t Geometry::AddVertex(int vertexInd, DoubleArray& coordinates)
 //
 void Geometry::AddTexturePoints(ListOfInt& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v)
 {
+#if 1 //inverse loops
+    for (auto k = jpoints.rbegin(); k!=jpoints.rend(); k++) {
+        auto i = GetAddTextureVertex(*k, coordinates, v2v);
+        ind.push_back(i);
+    }
+#else
     for (auto& jpoint : jpoints) {
         auto i = GetAddTextureVertex(jpoint, coordinates, v2v);
         ind.push_back(i);
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------------------------
