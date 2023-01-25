@@ -9,6 +9,18 @@ using namespace CityJsonRDF;
 
 //-----------------------------------------------------------------------------------------------
 //
+Geometry::Geometry(CityModel& cityModel)
+    : m_cityModel(cityModel)
+    , m_bUseTemplateVerticies(false)
+{
+    for (int i = 0; i < 3; i++) {
+        m_cityScale[i] = 1;
+        m_cityTranslate[i] = 0;
+    }
+}
+
+//-----------------------------------------------------------------------------------------------
+//
 void Geometry::Convert(rapidjson::Value& jgeometry, OwlInstances& items)
 {
     //std::vector<std::string, std::list<GEOM::GeometricItem>> lod2items;
@@ -397,10 +409,11 @@ int64_t Geometry::AddVertex(int vertexInd, DoubleArray& coordinates)
 {
     assert(coordinates.size() % 3 == 0);
 
-    auto& jpoint = GetVertex(vertexInd);
+    double coord[3] = { 0,0,0 };
+    GetVertex(coord, vertexInd);
+
     for (int i = 0; i < 3; i++) {
-        auto v = jpoint[i].GetDouble();
-        coordinates.push_back(v);
+        coordinates.push_back(coord[i]);
     }
 
     return coordinates.size() / 3 - 1;
@@ -522,12 +535,47 @@ GEOM::Curve Geometry::ConvertCurve(rapidjson::Value& jloop)
 
 //-----------------------------------------------------------------------------------------------
 //
-rapidjson::Value& Geometry::GetVertex(int vertexInd)
+void Geometry::GetVertex(double coord[3], int vertexInd)
 {
+    rapidjson::Value* jpt = nullptr;
+
     if (m_bUseTemplateVerticies)
-        return m_templateVerticies[vertexInd];
+        jpt = &m_templateVerticies[vertexInd];
     else
-        return m_jcityVerticies[vertexInd];
+        jpt = &m_jcityVerticies[vertexInd];
+
+    for (int i = 0; i < 3; i++) {
+        coord[i] = (*jpt)[i].GetDouble();
+
+        if (!m_bUseTemplateVerticies) {
+            coord[i] = coord[i] * m_cityScale[i] + m_cityTranslate[i];
+        }
+    }
+
+}
+
+//-----------------------------------------------------------------------------------------------
+//
+
+void Geometry::SetCityTransform(rapidjson::Value& jtransform)
+{
+    for (auto it = jtransform.MemberBegin(); it != jtransform.MemberEnd(); it++) {
+        const char* memberName = it->name.GetString();
+
+        if (!strcmp(memberName, MEMBER_SCALE)) {
+            for (int i = 0; i < 3; i++) {
+                m_cityScale[i] = (it->value)[i].GetDouble();
+            }
+        }
+        else if (!strcmp(memberName, MEMBER_TRANSLATE)) {
+            for (int i = 0; i < 3; i++) {
+                m_cityTranslate[i] = (it->value)[i].GetDouble();
+            }
+        }
+        else {
+            m_cityModel.LogMessage(ILog::Level::Info, "Unsupported transform member '%s'", memberName);
+        }
+    }
 }
 
 //-----------------------------------------------------------------------------------------------
@@ -585,9 +633,12 @@ GEOM::GeometricItem Geometry::ConvertGeometryInstance(rapidjson::Value& boundari
     }
 
     auto nInsertPt = boundaries[0].GetInt();
-    auto& jInsertPt = GetVertex(nInsertPt);
+
+    double rInsertPt[3] = { 0,0,0 };
+    GetVertex(rInsertPt, nInsertPt);
+
     for (int i = 0; i < 3; i++){
-        double v = jInsertPt[i].GetDouble();
+        double v = rInsertPt[i];
         t[4*i + 3] += v;
     }
 

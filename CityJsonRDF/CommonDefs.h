@@ -44,6 +44,8 @@
 #define MEMBER_ATTRIBUTES       "attributes"
 #define MEMBER_METADATA         "metadata"
 #define MEMBER_EXTENSIONS       "extensions"
+#define MEMBER_SCALE            "scale"
+#define MEMBER_TRANSLATE        "translate"
 
 #define TYPE_CityJSON           "CityJSON"
 #define TYPE_MultiPoint         "MultiPoint"

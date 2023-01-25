@@ -85,7 +85,11 @@ void CityModel::LogMessage(ILog::Level level, const char* fmt, ...)
 void CityModel::ReadCityFile(const char* cityFilePath)
 {
     if (!JsonReadFile(m_cityDOM, cityFilePath)) {
-        ThrowError("Failed to open file %s", cityFilePath);
+        ThrowError("Failed to open file '%s'", cityFilePath);
+    }
+
+    if (m_cityDOM.IsNull()) {
+        ThrowError("Invalid or empty JSON file '%s'", cityFilePath);
     }
 }
 
@@ -112,7 +116,6 @@ void CityModel::ConvertCityJSONObject()
 {
     const char*         type        = nullptr;
     const char*         version     = nullptr;
-    rapidjson::Value    transform;
     rapidjson::Value    cityObjects;
     rapidjson::Value    metadata;
     rapidjson::Value    extensions;
@@ -134,7 +137,7 @@ void CityModel::ConvertCityJSONObject()
             State().Pop();
         }
         else if (!strcmp(memberName, MEMBER_TRANSFORM)) {
-            transform = member.value;
+            m_geometry.SetCityTransform (member.value);
         }
         else if (!strcmp(memberName, MEMBER_GEOM_TEMPLATES)) {
             m_geometry.SetGeometryTemplates(member.value);
@@ -211,7 +214,6 @@ void CityModel::ConvertCityJSONObject()
     //
     AddNestedObjects(city, CJProp_Children, owlObjects);
 
-    CreateAttribute(city, MEMBER_TRANSFORM, CJProp_Prefix, transform);
     CreateAttribute(city, MEMBER_METADATA, CJProp_Prefix, metadata);
 }
 

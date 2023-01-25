@@ -27,31 +27,36 @@ void Settings::Load()
     rapidjson::Document json;
     if (JsonReadFile(json, path.string().c_str())) {
 
-        m_cityModel.LogMessage(ILog::Level::Info, "Load configuration file: %s", path.string().c_str());
+        if (json.IsNull()) {
+            m_cityModel.LogMessage(ILog::Level::Error, "Configuration file is empty or invalid JSON format: %s", path.string().c_str());
+        }
+        else {
+            m_cityModel.LogMessage(ILog::Level::Info, "Load configuration file: %s", path.string().c_str());
 
-        m_cityModel.State().PushMember("SettingFile");
+            m_cityModel.State().PushMember("SettingFile");
 
-        for (auto& section : json.GetObject()) {
-            
-            auto name = section.name.GetString();
-            m_cityModel.State().PushMember(name);
+            for (auto& section : json.GetObject()) {
 
-            if (!strcmp(name, SECTION_OPTIONS)) {
-                LoadOptions(section.value);
-            }
-            else if (!strcmp(name, SECTION_SEMANTIC_COLORS)) {
-                LoadColors(section.value, m_semanticColors);
-            }
-            else if (!strcmp(name, SECTION_FILTERS)) {
-                //LoadColors(section.value, m_semanticColors);
-            }
-            else {
-                m_cityModel.LogMessage(ILog::Level::Warning, "Unknwon congiguration section '%s'", name);
-            }
+                auto name = section.name.GetString();
+                m_cityModel.State().PushMember(name);
 
+                if (!strcmp(name, SECTION_OPTIONS)) {
+                    LoadOptions(section.value);
+                }
+                else if (!strcmp(name, SECTION_SEMANTIC_COLORS)) {
+                    LoadColors(section.value, m_semanticColors);
+                }
+                else if (!strcmp(name, SECTION_FILTERS)) {
+                    //LoadColors(section.value, m_semanticColors);
+                }
+                else {
+                    m_cityModel.LogMessage(ILog::Level::Warning, "Unknwon congiguration section '%s'", name);
+                }
+
+                m_cityModel.State().Pop();
+            }
             m_cityModel.State().Pop();
         }
-        m_cityModel.State().Pop();
     }
     else{
         m_cityModel.LogMessage(ILog::Level::Info, "Use default settings, configuration file not found: %s", path.string().c_str());

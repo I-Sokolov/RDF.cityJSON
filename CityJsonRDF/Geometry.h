@@ -7,9 +7,10 @@ class CityModel;
 class Geometry
 {
 public:
-    Geometry(CityModel& cityModel) : m_cityModel(cityModel), m_bUseTemplateVerticies (false) {}
+    Geometry(CityModel& cityModel);
 
     void SetCityVerticies(rapidjson::Value& jverticies) { m_jcityVerticies = jverticies; }
+    void SetCityTransform(rapidjson::Value& jtransform);
 
     void SetGeometryTemplates(rapidjson::Value& jtemplates);
 
@@ -75,7 +76,7 @@ private:
     void AddPoints(rapidjson::Value& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v);
     int64_t GetAddVertex(rapidjson::Value& jpoint, DoubleArray& coordinates, Int2Int64& v2v);
     int64_t AddVertex(int vertexInd, DoubleArray& coordinates);
-    rapidjson::Value& GetVertex(int vertexInd);
+    void GetVertex(double coord[3], int vertexInd);
 
     void AddTexturePoints(ListOfInt& jpoints, DoubleArray& coordinates, Int64Array& ind, Int2Int64& v2v);
     int64_t GetAddTextureVertex(int jind, DoubleArray& coordinates, Int2Int64& v2v);
@@ -94,6 +95,8 @@ private:
 private:
     CityModel&           m_cityModel;
     rapidjson::Value     m_jcityVerticies;
+    double               m_cityScale[3];
+    double               m_cityTranslate[3];
     rapidjson::Value     m_templateVerticies;
     bool                 m_bUseTemplateVerticies;
     Templates            m_templates;
